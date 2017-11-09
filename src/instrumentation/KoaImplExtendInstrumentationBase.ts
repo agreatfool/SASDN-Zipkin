@@ -1,9 +1,9 @@
 import * as zipkin from 'zipkin';
 import {MiddlewareNext} from 'sasdn';
 import {Context as KoaContext} from 'koa';
-import {InstrumentationBase} from '../InstrumentationBase';
-import * as lib from '../../lib/lib';
-import * as Trace from '../../Trace';
+import {InstrumentationBase} from './abstract/InstrumentationBase';
+import * as lib from '../lib/lib';
+import * as Trace from '../Trace';
 
 export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
 

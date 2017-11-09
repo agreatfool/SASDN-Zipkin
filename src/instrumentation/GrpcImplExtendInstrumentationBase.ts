@@ -1,9 +1,9 @@
 import * as zipkin from 'zipkin';
 import * as grpc from 'grpc';
 import {MiddlewareNext, RpcContext} from 'sasdn';
-import {InstrumentationBase} from '../InstrumentationBase';
-import * as lib from '../../lib/lib';
-import * as Trace from '../../Trace';
+import {InstrumentationBase} from './abstract/InstrumentationBase';
+import * as lib from '../lib/lib';
+import * as Trace from '../Trace';
 
 export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
 

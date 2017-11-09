@@ -1,7 +1,7 @@
 ///<reference path="../../node_modules/grpc-tsd/src/grpc.d.ts"/>
 
 import * as zipkin from 'zipkin';
-import * as grpc from "grpc";
+import * as grpc from 'grpc';
 import * as url from 'url';
 import {Request as KoaRequest} from 'koa';
 

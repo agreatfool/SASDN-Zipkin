@@ -3,7 +3,7 @@ import * as TransportHttp from 'zipkin-transport-http';
 import * as CLSContext from 'zipkin-context-cls';
 import * as lib from './lib/lib';
 
-export function buildZipkinOption(value: string) {
+export function buildZipkinOption(value: string): zipkin.Option {
     if (value != null) {
         return new zipkin.option.Some(value);
     } else {
@@ -11,7 +11,7 @@ export function buildZipkinOption(value: string) {
     }
 }
 
-export function createTracer(endpoint: string, sampler: number = 1) {
+export function createTracer(endpoint: string, sampler: number = 1): zipkin.Tracer {
     return new zipkin.Tracer({
         ctxImpl: new CLSContext('zipkin'),
         recorder: new zipkin.BatchRecorder({

@@ -1,7 +1,7 @@
 import * as zipkin from 'zipkin';
 import {Middleware as KoaMiddleware} from 'koa';
 import {RpcContext, RpcMiddleware} from 'sasdn';
-import {InstrumentationBase, TraceInfo, defaultTraceInfo} from '../InstrumentationBase';
+import {InstrumentationBase, TraceInfo, defaultTraceInfo} from './abstract/InstrumentationBase';
 import {Repository, SelectQueryBuilder} from 'typeorm';
 
 export class TypeOrmImplExtendInstrumentationBase extends InstrumentationBase {

@@ -2,7 +2,7 @@
 
 import * as zipkin from 'zipkin';
 import {Middleware as KoaMiddleware, Context as KoaContext} from 'koa';
-import {RpcContext, RpcMiddleware} from 'sasdn';
+import {GatewayContext, RpcContext, RpcMiddleware} from 'sasdn';
 
 // /src/Trace.ts
 export function buildZipkinOption(value: string): zipkin.Option;
@@ -48,17 +48,17 @@ export declare abstract class InstrumentationBase {
 export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
     public createMiddleware();
 
-    public createClient<T>(client: T, ctx?: RpcContext): T;
+    public createClient<T>(client: T, ctx?: GatewayContext | RpcContext): T;
 }
 
 export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
     public createMiddleware();
 
-    protected createClient<T>(client: T, ctx?: RpcContext): T;
+    protected createClient<T>(client: T, ctx?: GatewayContext | RpcContext): T;
 }
 
 export class TypeOrmImplExtendInstrumentationBase extends InstrumentationBase {
     protected createMiddleware();
 
-    public createClient<T>(client: T, ctx?: RpcContext): T;
+    public createClient<T>(client: T, ctx?: GatewayContext | RpcContext): T;
 }

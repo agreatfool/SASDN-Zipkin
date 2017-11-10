@@ -32,7 +32,6 @@ export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
                     return Trace.buildZipkinOption(value);
                 }
             );
-            console.log('koa middleware', tracer.id.traceId);
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
 
             this.loggerServerReceive(traceId, req.method.toUpperCase(), {

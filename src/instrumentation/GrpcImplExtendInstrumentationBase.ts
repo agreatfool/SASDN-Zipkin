@@ -27,7 +27,6 @@ export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
                     return Trace.buildZipkinOption(value);
                 }
             );
-            console.log('grpc middleware', tracer.id.traceId);
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
 
             this.loggerServerReceive(traceId, 'rpc');
@@ -59,7 +58,6 @@ export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
                 client[property] = function () {
                     // create SpanId
                     tracer.setId(tracer.createChildId());
-                    console.log('createClient', tracer.id.traceId);
                     const traceId = tracer.id;
 
                     _this.loggerClientSend(traceId, 'rpc', {
@@ -90,9 +88,6 @@ export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
                             callback(err, res);
                         };
                     });
-
-                    console.log('argus', argus);
-                    console.log('metadata', argus[1]);
 
                     const call = original.apply(client, argus);
 

@@ -27,8 +27,6 @@ export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
                     return Trace.buildZipkinOption(value);
                 }
             );
-            console.log(req);
-            console.log('gRPC traceId', traceId.traceId);
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
 
             this.loggerServerReceive(traceId, 'rpc');
@@ -58,52 +56,46 @@ export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
             if (property != 'constructor' && typeof original == 'function') {
                 const _this = this;
                 client[property] = function () {
-                    // // create SpanId
-                    // tracer.setId(tracer.createChildId());
-                    // const traceId = tracer.id;
-                    //
-                    // _this.loggerClientSend(traceId, 'rpc', {
-                    //     'rpc_query': property,
-                    //     'rpc_query_params': JSON.stringify(arguments)
-                    // });
-                    //
-                    // const argus = _this.updateArgumentWithMetadata(arguments, traceId, (callback) => {
-                    //     return (err: Error, res: any) => {
-                    //         if (err) {
-                    //             _this.loggerClientReceive(traceId, {
-                    //                 'rpc_end': `Error`,
-                    //                 'rpc_end_response': err.message
-                    //             });
-                    //         } else {
-                    //             let resObj: string;
-                    //             try {
-                    //                 resObj = JSON.stringify(res);
-                    //             } catch (e) {
-                    //                 resObj = res.toString();
-                    //             }
-                    //
-                    //             _this.loggerClientReceive(traceId, {
-                    //                 'rpc_end': `Callback`,
-                    //                 'rpc_end_response': resObj
-                    //             });
-                    //         }
-                    //         callback(err, res);
-                    //     };
-                    // });
+                    // create SpanId
+                    tracer.setId(tracer.createChildId());
+                    const traceId = tracer.id;
 
-                    // const call = original.apply(client, argus);
+                    _this.loggerClientSend(traceId, 'rpc', {
+                        'rpc_query': property,
+                        'rpc_query_params': JSON.stringify(arguments)
+                    });
 
-                    // call.on('end', () => {
-                    //     _this.loggerClientReceive(traceId, {
-                    //         'rpc_end': `Call`,
-                    //     });
-                    // });
+                    const argus = _this.updateArgumentWithMetadata(arguments, traceId, (callback) => {
+                        return (err: Error, res: any) => {
+                            if (err) {
+                                _this.loggerClientReceive(traceId, {
+                                    'rpc_end': `Error`,
+                                    'rpc_end_response': err.message
+                                });
+                            } else {
+                                let resObj: string;
+                                try {
+                                    resObj = JSON.stringify(res);
+                                } catch (e) {
+                                    resObj = res.toString();
+                                }
 
-                    let metadata = new grpc.Metadata();
-                    metadata.add('A-B-C', '123');
-                    console.log(arguments);
-                    return original.apply(client, [arguments[0], metadata, arguments[2]]);
+                                _this.loggerClientReceive(traceId, {
+                                    'rpc_end': `Callback`,
+                                    'rpc_end_response': resObj
+                                });
+                            }
+                            callback(err, res);
+                        };
+                    });
 
+                    const call = original.apply(client, argus);
+
+                    call.on('end', () => {
+                        _this.loggerClientReceive(traceId, {
+                            'rpc_end': `Call`,
+                        });
+                    });
                 };
             }
         });
@@ -112,8 +104,6 @@ export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
     }
 
     private updateArgumentWithMetadata(argus: IArguments, traceId: zipkin.TraceId, callback: Function): Array<any> {
-        const oldArgus = Object.assign({}, argus);
-
         // argument length is 2 or 3
         // {'0': params, '1': function callback}
         // {'0': params, '1': metadata '2': function callback}
@@ -124,6 +114,6 @@ export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
         metadata.add(zipkin.HttpHeaders.SpanId, traceId.spanId);
         metadata.add(zipkin.HttpHeaders.Sampled, traceId.sampled.getOrElse() ? '1' : '0');
 
-        return [argus[0], metadata, callback(argus.length == 2 ? oldArgus[1] : oldArgus[2])];
+        return [argus[0], metadata, callback(argus.length == 2 ? argus[1] : argus[2])];
     }
 }

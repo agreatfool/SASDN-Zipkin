@@ -1,8 +1,6 @@
 ///<reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts"/>
 
 import * as zipkin from 'zipkin';
-import {Middleware as KoaMiddleware, Context as KoaContext} from 'koa';
-import {RpcContext, RpcMiddleware} from 'sasdn';
 import * as lib from '../../lib/lib';
 
 export interface TraceInfo {
@@ -16,6 +14,10 @@ export interface TraceInfo {
     port?: number;
 }
 
+export interface Middleware {
+    (ctx: any, next: () => Promise<any>): Promise<any>
+}
+
 interface RecordBinaryMap {
     [key: string]: string;
 }
@@ -26,7 +28,6 @@ export const defaultTraceInfo: TraceInfo = {
     port: 0,
 };
 
-
 export abstract class InstrumentationBase {
 
     protected info: TraceInfo;
@@ -35,28 +36,28 @@ export abstract class InstrumentationBase {
         this.info = info;
     }
 
-    public abstract createMiddleware(): KoaMiddleware | RpcMiddleware;
+    public abstract createMiddleware(): Middleware;
 
-    public abstract createClient<T>(client: T, ctx?: KoaContext | RpcContext): T;
+    public abstract createClient<T>(client: T, ctx?: object): T;
 
-    protected loggerServerReceive(traceId: zipkin.TraceId, recordRpc: string, recordBinarys: RecordBinaryMap = {}) {
+    protected loggerServerReceive(traceId: zipkin.TraceId, method: string, recordBinarys: RecordBinaryMap = {}) {
         const tracer = this.info.tracer as zipkin.Tracer;
         const serviceName = this.info.serviceName || 'unknown';
         const port = this.info.port || 0;
 
         tracer.scoped(() => {
+            tracer.setId(traceId);
+
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }
-
-            tracer.setId(traceId);
             tracer.recordServiceName(serviceName);
-            tracer.recordRpc(recordRpc);
+            tracer.recordRpc(method);
             tracer.recordAnnotation(new zipkin.Annotation.ServerRecv());
             tracer.recordAnnotation(new zipkin.Annotation.LocalAddr({port}));
 
             if (traceId.flags !== 0 && traceId.flags != null) {
-                tracer.recordBinary(zipkin.HttpHeaders.Flags, traceId.flags.toString());
+                tracer.recordBinary(zipkin.HttpHeaders.Flags, traceId.flags);
             }
         });
     };
@@ -65,28 +66,29 @@ export abstract class InstrumentationBase {
         const tracer = this.info.tracer as zipkin.Tracer;
 
         tracer.scoped(() => {
+            tracer.setId(traceId);
+
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }
-
-            tracer.setId(traceId);
             tracer.recordAnnotation(new zipkin.Annotation.ServerSend());
         });
     };
 
-    protected loggerClientSend(traceId: zipkin.TraceId, recordRpc: string, recordBinarys: RecordBinaryMap = {}): void {
+    protected loggerClientSend(traceId: zipkin.TraceId, method: string, recordBinarys: RecordBinaryMap = {}): void {
         const tracer = this.info.tracer as zipkin.Tracer;
         const serviceName = this.info.serviceName || 'unknown';
         const remoteService = this.info.remoteService || null;
         const port = this.info.port || 0;
 
         tracer.scoped(() => {
+            tracer.setId(traceId);
+
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }
-
             tracer.recordServiceName(serviceName);
-            tracer.recordRpc(recordRpc);
+            tracer.recordRpc(method);
             tracer.recordAnnotation(new zipkin.Annotation.ClientSend());
             tracer.recordAnnotation(new zipkin.Annotation.LocalAddr({port}));
 
@@ -99,7 +101,7 @@ export abstract class InstrumentationBase {
             }
 
             if (traceId.flags !== 0 && traceId.flags != null) {
-                tracer.recordBinary(zipkin.HttpHeaders.Flags, traceId.flags.toString());
+                tracer.recordBinary(zipkin.HttpHeaders.Flags, traceId.flags);
             }
         });
     };
@@ -108,11 +110,11 @@ export abstract class InstrumentationBase {
         const tracer = this.info.tracer as zipkin.Tracer;
 
         tracer.scoped(() => {
+            tracer.setId(traceId);
+
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }
-
-            tracer.setId(traceId);
             tracer.recordAnnotation(new zipkin.Annotation.ClientRecv());
         });
     };

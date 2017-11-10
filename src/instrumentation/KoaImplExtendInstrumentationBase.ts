@@ -1,13 +1,14 @@
 import * as zipkin from 'zipkin';
+import * as url from 'url';
 import {MiddlewareNext} from 'sasdn';
-import {Context as KoaContext} from 'koa';
-import {InstrumentationBase} from './abstract/InstrumentationBase';
+import {Context as KoaContext, Request as KoaRequest} from 'koa';
+import {InstrumentationBase, Middleware} from './abstract/InstrumentationBase';
 import * as lib from '../lib/lib';
 import * as Trace from '../Trace';
 
 export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
 
-    public createMiddleware() {
+    public createMiddleware(): Middleware {
         if (this.info.tracer === false) {
             return async (ctx: KoaContext, next: MiddlewareNext) => {
                 await next();
@@ -31,12 +32,10 @@ export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
                     return Trace.buildZipkinOption(value);
                 }
             );
-
-            tracer.setId(traceId);
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
 
             this.loggerServerReceive(traceId, req.method.toUpperCase(), {
-                'http_url': lib.formatRequestUrl(req)
+                'http_url': this.formatRequestUrl(req)
             });
 
             await next();
@@ -47,7 +46,17 @@ export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
         };
     }
 
-    public createClient<T>(client: T, ctx?: KoaContext): T {
+    public createClient<T>(client: T, ctx?: object): T {
         throw new Error('Only the client type instrumentation are allowed to use createClient!');
+    }
+
+    private formatRequestUrl(req: KoaRequest): string {
+        const parsed = url.parse(req.originalUrl);
+        return url.format({
+            protocol: req.protocol,
+            host: req.header['host'],
+            pathname: parsed.pathname,
+            search: parsed.search
+        });
     }
 }

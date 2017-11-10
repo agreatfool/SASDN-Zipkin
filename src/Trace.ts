@@ -3,7 +3,7 @@ import * as TransportHttp from 'zipkin-transport-http';
 import * as CLSContext from 'zipkin-context-cls';
 import * as lib from './lib/lib';
 
-export function buildZipkinOption(value: string): zipkin.Option {
+export function buildZipkinOption(value: any): zipkin.Option {
     if (value != null) {
         return new zipkin.option.Some(value);
     } else {
@@ -28,26 +28,30 @@ export function createTraceId(isChildNode: boolean, flag: any, tracer: zipkin.Tr
     if (isChildNode) {
         const spanId = zipkinOption(zipkin.HttpHeaders.SpanId);
         spanId.ifPresent((sid: zipkin.spanId) => {
-            return new zipkin.TraceId({
+            const childId =  new zipkin.TraceId({
                 traceId: zipkinOption(zipkin.HttpHeaders.TraceId),
                 parentId: zipkinOption(zipkin.HttpHeaders.ParentSpanId),
                 spanId: sid,
                 sampled: zipkinOption(zipkin.HttpHeaders.Sampled).map(lib.stringToBoolean),
                 flags: zipkinOption(zipkin.HttpHeaders.Flags).flatMap(lib.stringToIntOption).getOrElse(0)
             });
+            tracer.setId(childId);
         });
     } else {
         const rootId = tracer.createRootId();
         if (flag) {
-            return new zipkin.TraceId({
+            const rootIdWithFlags = new zipkin.TraceId({
                 traceId: rootId.traceId,
                 parentId: rootId.parentId,
                 spanId: rootId.spanId,
                 sampled: rootId.sampled,
                 flags: zipkinOption(zipkin.HttpHeaders.Flags)
             });
+            tracer.setId(rootIdWithFlags);
         } else {
-            return rootId;
+            tracer.setId(rootId);
         }
     }
+
+    return tracer.id;
 }

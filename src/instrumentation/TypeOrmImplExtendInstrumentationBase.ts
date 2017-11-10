@@ -1,16 +1,14 @@
 import * as zipkin from 'zipkin';
-import {Middleware as KoaMiddleware} from 'koa';
-import {RpcContext, RpcMiddleware} from 'sasdn';
-import {InstrumentationBase, TraceInfo, defaultTraceInfo} from './abstract/InstrumentationBase';
+import {InstrumentationBase, Middleware,} from './abstract/InstrumentationBase';
 import {Repository, SelectQueryBuilder} from 'typeorm';
 
 export class TypeOrmImplExtendInstrumentationBase extends InstrumentationBase {
 
-    public createMiddleware(info: TraceInfo = defaultTraceInfo): KoaMiddleware | RpcMiddleware {
+    public createMiddleware(): Middleware {
         throw new Error('Only the server type instrumentation are allowed to use createMiddleware!');
     }
 
-    public createClient<T>(client: T, ctx?: RpcContext): T {
+    public createClient<T>(client: T, ctx?: object): T {
         if (this.info.tracer === false || client['proxy'] == true) {
             return client;
         }
@@ -24,6 +22,7 @@ export class TypeOrmImplExtendInstrumentationBase extends InstrumentationBase {
         }
 
         const getRepositoryOriginal = client['getRepository'];
+        const _this = this;
         client['getRepository'] = function <Entity>(): Repository<Entity> {
             const repository = getRepositoryOriginal.apply(client, arguments);
             if (client['proxy'] == true) {
@@ -42,14 +41,12 @@ export class TypeOrmImplExtendInstrumentationBase extends InstrumentationBase {
                         const original = queryBuilder[property];
 
                         queryBuilder[property] = function () {
-
                             // create SpanId
                             tracer.setId(tracer.createChildId());
                             const traceId = tracer.id;
 
-                            this.loggerClientSend(traceId, 'db_query', {
-                                'db_sql': queryBuilder['getSql'](),
-                                'rpc_query_params': JSON.stringify(arguments)
+                            _this.loggerClientSend(traceId, 'db_query', {
+                                'db_sql': queryBuilder['getSql']()
                             });
 
                             const call = original.apply(queryBuilder, arguments) as Promise<any>;
@@ -61,18 +58,19 @@ export class TypeOrmImplExtendInstrumentationBase extends InstrumentationBase {
                                     resObj = res.toString();
                                 }
 
-                                this.loggerClientReceive(traceId, {
+                                _this.loggerClientReceive(traceId, {
                                     'db_end': `Succeed`,
                                     'db_response': resObj
                                 });
                                 return res;
                             }).catch((err) => {
-                                this.loggerClientReceive(traceId, {
+                                _this.loggerClientReceive(traceId, {
                                     'db_end': `Error`,
                                     'db_response': err.message
                                 });
                                 throw err;
                             });
+
                         };
                     }
                 });

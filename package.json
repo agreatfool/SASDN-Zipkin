@@ -20,7 +20,6 @@
     "grpc": "1.4.1",
     "grpc-tsd": "^1.0.9",
     "koa": "^2.3.0",
-    "sasdn": "git:github.com/niklaus0823/SASDN.git#master",
     "typeorm": "^0.1.1",
     "zipkin": "^0.7.3",
     "zipkin-context-cls": "^0.6.1",

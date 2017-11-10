@@ -1,22 +1,25 @@
 import * as zipkin from 'zipkin';
 import * as grpc from 'grpc';
-import {MiddlewareNext, RpcContext} from 'sasdn';
 import {InstrumentationBase} from './abstract/InstrumentationBase';
 import * as lib from '../lib/lib';
 import * as Trace from '../Trace';
+
+export declare class GrpcContext {
+    call: grpc.IServerCall;
+}
 
 export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
 
     public createMiddleware() {
         if (this.info.tracer === false) {
-            return async (ctx: RpcContext, next: MiddlewareNext) => {
+            return async (ctx: GrpcContext, next: () => Promise<any>) => {
                 await next();
             };
         }
 
         const tracer = this.info.tracer as zipkin.Tracer;
 
-        return async (ctx: RpcContext, next: MiddlewareNext) => {
+        return async (ctx: GrpcContext, next: () => Promise<any>) => {
             const req = ctx.call.metadata;
             const traceId = Trace.createTraceId(
                 lib.GrpcMetadata.containsRequired(req),

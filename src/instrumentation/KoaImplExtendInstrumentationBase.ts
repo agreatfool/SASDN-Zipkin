@@ -1,6 +1,5 @@
 import * as zipkin from 'zipkin';
 import * as url from 'url';
-import {MiddlewareNext} from 'sasdn';
 import {Context as KoaContext, Request as KoaRequest} from 'koa';
 import {InstrumentationBase, Middleware} from './abstract/InstrumentationBase';
 import * as lib from '../lib/lib';
@@ -10,7 +9,7 @@ export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
 
     public createMiddleware(): Middleware {
         if (this.info.tracer === false) {
-            return async (ctx: KoaContext, next: MiddlewareNext) => {
+            return async (ctx: KoaContext, next: () => Promise<any>) => {
                 await next();
             };
         }
@@ -18,7 +17,7 @@ export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
         // Set value
         const tracer = this.info.tracer as zipkin.Tracer;
 
-        return async (ctx: KoaContext, next: MiddlewareNext) => {
+        return async (ctx: KoaContext, next: () => Promise<any>) => {
 
             const req = ctx.request;
             const res = ctx.response;

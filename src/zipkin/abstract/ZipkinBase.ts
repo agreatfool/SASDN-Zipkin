@@ -2,17 +2,7 @@
 
 import * as zipkin from 'zipkin';
 import * as lib from '../../lib/lib';
-
-export interface TraceInfo {
-    tracer: zipkin.Tracer | false;
-    serviceName?: string;
-    remoteService?: {
-        serviceName?: string;
-        host?: string;
-        port?: number;
-    };
-    port?: number;
-}
+import {RemoteTraceInfo, TraceInfo, TracerHelper} from '../../TracerHelper';
 
 export interface Middleware {
     (ctx: any, next: () => Promise<any>): Promise<any>
@@ -22,28 +12,37 @@ interface RecordBinaryMap {
     [key: string]: string;
 }
 
-export const defaultTraceInfo: TraceInfo = {
-    tracer: false,
-    serviceName: 'unknown',
-    port: 0,
-};
+export abstract class ZipkinBase {
 
-export abstract class InstrumentationBase {
+    public constructor() {
 
-    protected info: TraceInfo;
-
-    public constructor(info: TraceInfo = defaultTraceInfo) {
-        this.info = info;
     }
+
+    public static initTracerInfo(endpoint: string, info: TraceInfo): void {
+        TracerHelper.instance().init(endpoint, info);
+    };
+
+    public static setTracerInfo(info: TraceInfo): void {
+        if (info.serviceName) {
+            TracerHelper.instance().setServiceName(info.serviceName);
+        }
+        if (info.port) {
+            TracerHelper.instance().setPort(info.port);
+        }
+        if (info.remoteService) {
+            TracerHelper.instance().setRemoteService(info.remoteService);
+        }
+    };
 
     public abstract createMiddleware(): Middleware;
 
     public abstract createClient<T>(client: T, ctx?: object): T;
 
     protected loggerServerReceive(traceId: zipkin.TraceId, method: string, recordBinarys: RecordBinaryMap = {}) {
-        const tracer = this.info.tracer as zipkin.Tracer;
-        const serviceName = this.info.serviceName || 'unknown';
-        const port = this.info.port || 0;
+        const info = TracerHelper.instance().getTraceInfo();
+        const tracer = TracerHelper.instance().getTracer();
+        const serviceName = info.serviceName || 'unknown';
+        const port = info.port || 0;
 
         tracer.scoped(() => {
             tracer.setId(traceId);
@@ -63,7 +62,7 @@ export abstract class InstrumentationBase {
     };
 
     protected loggerServerSend(traceId: zipkin.TraceId, recordBinarys: RecordBinaryMap = {}): void {
-        const tracer = this.info.tracer as zipkin.Tracer;
+        const tracer = TracerHelper.instance().getTracer();
 
         tracer.scoped(() => {
             tracer.setId(traceId);
@@ -76,10 +75,11 @@ export abstract class InstrumentationBase {
     };
 
     protected loggerClientSend(traceId: zipkin.TraceId, method: string, recordBinarys: RecordBinaryMap = {}): void {
-        const tracer = this.info.tracer as zipkin.Tracer;
-        const serviceName = this.info.serviceName || 'unknown';
-        const remoteService = this.info.remoteService || null;
-        const port = this.info.port || 0;
+        const info = TracerHelper.instance().getTraceInfo();
+        const tracer = TracerHelper.instance().getTracer();
+        const serviceName = info.serviceName || 'unknown';
+        const remoteService = info.remoteService || null;
+        const port = info.port || 0;
 
         tracer.scoped(() => {
             tracer.setId(traceId);
@@ -107,7 +107,7 @@ export abstract class InstrumentationBase {
     };
 
     protected loggerClientReceive(traceId: zipkin.TraceId, recordBinarys: RecordBinaryMap = {}): void {
-        const tracer = this.info.tracer as zipkin.Tracer;
+        const tracer = TracerHelper.instance().getTracer();
 
         tracer.scoped(() => {
             tracer.setId(traceId);

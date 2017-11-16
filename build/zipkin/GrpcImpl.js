@@ -1,59 +1,48 @@
-import * as zipkin from 'zipkin';
-import * as grpc from 'grpc';
-import {InstrumentationBase} from './abstract/InstrumentationBase';
-import * as lib from '../lib/lib';
-import * as Trace from '../Trace';
-
-export declare class GrpcContext {
-    call: grpc.IServerCall;
-}
-
-export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
-
-    public createMiddleware() {
-        if (this.info.tracer === false) {
-            return async (ctx: GrpcContext, next: () => Promise<any>) => {
-                await next();
-            };
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const zipkin = require("zipkin");
+const grpc = require("grpc");
+const ZipkinBase_1 = require("./abstract/ZipkinBase");
+const lib = require("../lib/lib");
+const TracerHelper_1 = require("../TracerHelper");
+class GrpcImpl extends ZipkinBase_1.ZipkinBase {
+    createMiddleware() {
+        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
+        if (tracer === null) {
+            return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
+                yield next();
+            });
         }
-
-        const tracer = this.info.tracer as zipkin.Tracer;
-
-        return async (ctx: GrpcContext, next: () => Promise<any>) => {
+        return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
             const req = ctx.call.metadata;
-            const traceId = Trace.createTraceId(
-                lib.GrpcMetadata.containsRequired(req),
-                lib.GrpcMetadata.getValue(req, zipkin.HttpHeaders.Flags),
-                tracer,
-                (name: string) => {
-                    const value = lib.GrpcMetadata.getValue(req, name);
-                    return Trace.buildZipkinOption(value);
-                }
-            );
+            const traceId = lib.createTraceId(lib.GrpcMetadata.containsRequired(req), lib.GrpcMetadata.getValue(req, zipkin.HttpHeaders.Flags), tracer, (name) => {
+                const value = lib.GrpcMetadata.getValue(req, name);
+                return lib.buildZipkinOption(value);
+            });
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
-
             this.loggerServerReceive(traceId, 'rpc');
-
-            await next();
-
+            yield next();
             this.loggerServerSend(traceId);
-        };
+        });
     }
-
-    public createClient<T>(client: T, ctx?: object): T {
-
-        if (this.info.tracer === false) {
+    createClient(client, ctx) {
+        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
+        if (tracer === null) {
             return client;
         }
-
-        const tracer = this.info.tracer as zipkin.Tracer;
-
         if (ctx
             && ctx.hasOwnProperty(zipkin.HttpHeaders.TraceId)
             && ctx[zipkin.HttpHeaders.TraceId] instanceof zipkin.TraceId) {
             tracer.setId(ctx[zipkin.HttpHeaders.TraceId]);
         }
-
         Object.getOwnPropertyNames(Object.getPrototypeOf(client)).forEach((property) => {
             const original = client[property];
             if (property != 'constructor' && typeof original == 'function') {
@@ -62,27 +51,26 @@ export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
                     // create SpanId
                     tracer.setId(tracer.createChildId());
                     const traceId = tracer.id;
-
                     _this.loggerClientSend(traceId, 'rpc', {
                         'rpc_query': property,
                         'rpc_query_params': JSON.stringify(arguments)
                     });
-
                     const argus = _this.updateArgumentWithMetadata(arguments, traceId, (callback) => {
-                        return (err: Error, res: any) => {
+                        return (err, res) => {
                             if (err) {
                                 _this.loggerClientReceive(traceId, {
                                     'rpc_end': `Error`,
                                     'rpc_end_response': err.message
                                 });
-                            } else {
-                                let resObj: string;
+                            }
+                            else {
+                                let resObj;
                                 try {
                                     resObj = JSON.stringify(res);
-                                } catch (e) {
+                                }
+                                catch (e) {
                                     resObj = res.toString();
                                 }
-
                                 _this.loggerClientReceive(traceId, {
                                     'rpc_end': `Callback`,
                                     'rpc_end_response': resObj
@@ -91,9 +79,7 @@ export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
                             callback(err, res);
                         };
                     });
-
                     const call = original.apply(client, argus);
-
                     call.on('end', () => {
                         _this.loggerClientReceive(traceId, {
                             'rpc_end': `Call`,
@@ -102,21 +88,18 @@ export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
                 };
             }
         });
-
         return client;
     }
-
-    private updateArgumentWithMetadata(argus: IArguments, traceId: zipkin.TraceId, callback: Function): Array<any> {
+    updateArgumentWithMetadata(argus, traceId, callback) {
         // argument length is 2 or 3
         // {'0': params, '1': function callback}
         // {'0': params, '1': metadata '2': function callback}
-
         const metadata = (argus.length == 3) ? argus[1] : new grpc.Metadata();
         metadata.add(zipkin.HttpHeaders.TraceId, traceId.traceId);
         metadata.add(zipkin.HttpHeaders.ParentSpanId, traceId.parentId);
         metadata.add(zipkin.HttpHeaders.SpanId, traceId.spanId);
         metadata.add(zipkin.HttpHeaders.Sampled, traceId.sampled.getOrElse() ? '1' : '0');
-
         return [argus[0], metadata, callback(argus.length == 2 ? argus[1] : argus[2])];
     }
 }
+exports.GrpcImpl = GrpcImpl;

@@ -1,21 +1,14 @@
 import * as zipkin from 'zipkin';
 
-// /src/Trace.ts
-export function buildZipkinOption(value: string): zipkin.Option;
-
-export function createTracer(endpoint: string, sampler?: number): zipkin.Tracer;
-
-export function createTraceId(isChildNode: boolean, flag: any, tracer: zipkin.Tracer, zipkinOption: (name: string) => zipkin.Option): zipkin.TraceId;
-
-// /src/instrumentation/abstract/InstrumentationBase.ts
 export interface TraceInfo {
-    tracer: zipkin.Tracer | false;
     serviceName?: string;
-    remoteService?: {
-        serviceName?: string;
-        host?: string;
-        port?: number;
-    };
+    port?: number;
+    remoteService?: RemoteTraceInfo;
+}
+
+export interface RemoteTraceInfo {
+    serviceName?: string;
+    host?: string;
     port?: number;
 }
 
@@ -27,10 +20,13 @@ interface RecordBinaryMap {
     [key: string]: string;
 }
 
-declare abstract class InstrumentationBase {
-    protected info: TraceInfo;
+declare abstract class ZipkinBase {
 
-    public constructor(info: TraceInfo);
+    public constructor();
+
+    public static initTracerInfo(endpoint: string, info: TraceInfo): void;
+
+    public static setTracerInfo(info: TraceInfo): void;
 
     public abstract createMiddleware(): Middleware;
 
@@ -45,19 +41,19 @@ declare abstract class InstrumentationBase {
     protected loggerClientReceive(traceId: zipkin.TraceId, recordBinarys: RecordBinaryMap): void;
 }
 
-export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
+export class GrpcImpl extends ZipkinBase {
     public createMiddleware(): Middleware;
 
     public createClient<T>(client: T, ctx?: object): T;
 }
 
-export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
+export class KoaImpl extends ZipkinBase {
     public createMiddleware(): Middleware;
 
     public createClient<T>(client: T, ctx?: object): T;
 }
 
-export class TypeOrmImplExtendInstrumentationBase extends InstrumentationBase {
+export class TypeOrmImpl extends ZipkinBase {
     public createMiddleware(): Middleware;
 
     public createClient<T>(client: T, ctx?: object): T;

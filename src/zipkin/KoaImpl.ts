@@ -1,34 +1,31 @@
 import * as zipkin from 'zipkin';
 import * as url from 'url';
 import {Context as KoaContext, Request as KoaRequest} from 'koa';
-import {InstrumentationBase, Middleware} from './abstract/InstrumentationBase';
+import {ZipkinBase, Middleware} from './abstract/ZipkinBase';
 import * as lib from '../lib/lib';
-import * as Trace from '../Trace';
+import {TracerHelper} from '../TracerHelper';
 
-export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
+export class KoaImpl extends ZipkinBase {
 
     public createMiddleware(): Middleware {
-        if (this.info.tracer === false) {
+        const tracer = TracerHelper.instance().getTracer();
+        if (tracer === null) {
             return async (ctx: KoaContext, next: () => Promise<any>) => {
                 await next();
             };
         }
 
-        // Set value
-        const tracer = this.info.tracer as zipkin.Tracer;
-
         return async (ctx: KoaContext, next: () => Promise<any>) => {
-
             const req = ctx.request;
             const res = ctx.response;
 
-            const traceId = Trace.createTraceId(
+            const traceId = lib.createTraceId(
                 lib.HttpHeader.containsRequired(req),
                 lib.HttpHeader.getValue(req, zipkin.HttpHeaders.Flags),
                 tracer,
                 (name: string) => {
                     const value = lib.HttpHeader.getValue(req, name);
-                    return Trace.buildZipkinOption(value);
+                    return lib.buildZipkinOption(value);
                 }
             );
             ctx[zipkin.HttpHeaders.TraceId] = traceId;

@@ -1,14 +1,15 @@
 import * as zipkin from 'zipkin';
 
-// /src/instrumentation/abstract/InstrumentationBase.ts
 export interface TraceInfo {
     serviceName?: string;
     port?: number;
-    remoteService?: {
-        serviceName?: string;
-        host?: string;
-        port?: number;
-    };
+    remoteService?: RemoteTraceInfo;
+}
+
+export interface RemoteTraceInfo {
+    serviceName?: string;
+    host?: string;
+    port?: number;
 }
 
 export interface Middleware {

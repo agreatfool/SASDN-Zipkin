@@ -1,6 +1,7 @@
 import * as zipkin from 'zipkin';
 import {ZipkinBase, Middleware,} from './abstract/ZipkinBase';
 import {Repository, SelectQueryBuilder} from 'typeorm';
+import {TracerHelper} from '../TracerHelper';
 
 export class TypeOrmImpl extends ZipkinBase {
 
@@ -9,11 +10,10 @@ export class TypeOrmImpl extends ZipkinBase {
     }
 
     public createClient<T>(client: T, ctx?: object): T {
-        if (this.info.tracer === false || client['proxy'] == true) {
+        const tracer = TracerHelper.instance().getTracer();
+        if (tracer === null || client['proxy'] == true) {
             return client;
         }
-
-        const tracer = this.info.tracer as zipkin.Tracer;
 
         if (ctx
             && ctx.hasOwnProperty(zipkin.HttpHeaders.TraceId)

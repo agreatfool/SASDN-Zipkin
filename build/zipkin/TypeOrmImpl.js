@@ -2,15 +2,16 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const zipkin = require("zipkin");
 const ZipkinBase_1 = require("./abstract/ZipkinBase");
+const TracerHelper_1 = require("../TracerHelper");
 class TypeOrmImpl extends ZipkinBase_1.ZipkinBase {
     createMiddleware() {
         throw new Error('Only the server type instrumentation are allowed to use createMiddleware!');
     }
     createClient(client, ctx) {
-        if (this.info.tracer === false || client['proxy'] == true) {
+        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
+        if (tracer === null || client['proxy'] == true) {
             return client;
         }
-        const tracer = this.info.tracer;
         if (ctx
             && ctx.hasOwnProperty(zipkin.HttpHeaders.TraceId)
             && ctx[zipkin.HttpHeaders.TraceId] instanceof zipkin.TraceId) {

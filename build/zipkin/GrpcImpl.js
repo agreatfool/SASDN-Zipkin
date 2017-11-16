@@ -12,18 +12,18 @@ const zipkin = require("zipkin");
 const grpc = require("grpc");
 const ZipkinBase_1 = require("./abstract/ZipkinBase");
 const lib = require("../lib/lib");
-const Trace = require("../Trace");
+const TracerHelper_1 = require("../TracerHelper");
 class GrpcImpl extends ZipkinBase_1.ZipkinBase {
     createMiddleware() {
-        if (this.info.tracer === false) {
+        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
+        if (tracer === null) {
             return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
                 yield next();
             });
         }
-        const tracer = this.info.tracer;
         return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
             const req = ctx.call.metadata;
-            const traceId = Trace.createTraceId(lib.GrpcMetadata.containsRequired(req), lib.GrpcMetadata.getValue(req, zipkin.HttpHeaders.Flags), tracer, (name) => {
+            const traceId = lib.createTraceId(lib.GrpcMetadata.containsRequired(req), lib.GrpcMetadata.getValue(req, zipkin.HttpHeaders.Flags), tracer, (name) => {
                 const value = lib.GrpcMetadata.getValue(req, name);
                 return lib.buildZipkinOption(value);
             });
@@ -34,10 +34,10 @@ class GrpcImpl extends ZipkinBase_1.ZipkinBase {
         });
     }
     createClient(client, ctx) {
-        if (this.info.tracer === false) {
+        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
+        if (tracer === null) {
             return client;
         }
-        const tracer = this.info.tracer;
         if (ctx
             && ctx.hasOwnProperty(zipkin.HttpHeaders.TraceId)
             && ctx[zipkin.HttpHeaders.TraceId] instanceof zipkin.TraceId) {

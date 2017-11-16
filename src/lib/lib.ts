@@ -28,6 +28,38 @@ export function buildZipkinOption(value: any): zipkin.Option {
     }
 }
 
+export function createTraceId(isChildNode: boolean, flag: any, tracer: zipkin.Tracer, zipkinOption: (name: string) => zipkin.Option): zipkin.TraceId {
+    if (isChildNode) {
+        const spanId = zipkinOption(zipkin.HttpHeaders.SpanId);
+        spanId.ifPresent((sid: zipkin.spanId) => {
+            const childId = new zipkin.TraceId({
+                traceId: zipkinOption(zipkin.HttpHeaders.TraceId),
+                parentId: zipkinOption(zipkin.HttpHeaders.ParentSpanId),
+                spanId: sid,
+                sampled: zipkinOption(zipkin.HttpHeaders.Sampled).map(stringToBoolean),
+                flags: zipkinOption(zipkin.HttpHeaders.Flags).flatMap(stringToIntOption).getOrElse(0)
+            });
+            tracer.setId(childId);
+        });
+    } else {
+        const rootId = tracer.createRootId();
+        if (flag) {
+            const rootIdWithFlags = new zipkin.TraceId({
+                traceId: rootId.traceId,
+                parentId: rootId.parentId,
+                spanId: rootId.spanId,
+                sampled: rootId.sampled,
+                flags: zipkinOption(zipkin.HttpHeaders.Flags)
+            });
+            tracer.setId(rootIdWithFlags);
+        } else {
+            tracer.setId(rootId);
+        }
+    }
+
+    return tracer.id;
+}
+
 export namespace GrpcMetadata {
     export function getValue(metadata: grpc.Metadata, headerName: string): string | Buffer {
         // metadata.get() 方法本身就是不区分大小写的，eg：X-B3-TraceId 和 x-b3-traceid 可以获取相同的数据

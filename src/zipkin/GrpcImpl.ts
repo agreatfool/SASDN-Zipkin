@@ -2,7 +2,7 @@ import * as zipkin from 'zipkin';
 import * as grpc from 'grpc';
 import {ZipkinBase} from './abstract/ZipkinBase';
 import * as lib from '../lib/lib';
-import * as Trace from '../Trace';
+import {TracerHelper} from '../TracerHelper';
 
 export declare class GrpcContext {
     call: grpc.IServerCall;
@@ -11,17 +11,16 @@ export declare class GrpcContext {
 export class GrpcImpl extends ZipkinBase {
 
     public createMiddleware() {
-        if (this.info.tracer === false) {
+        const tracer = TracerHelper.instance().getTracer();
+        if (tracer === null) {
             return async (ctx: GrpcContext, next: () => Promise<any>) => {
                 await next();
             };
         }
 
-        const tracer = this.info.tracer as zipkin.Tracer;
-
         return async (ctx: GrpcContext, next: () => Promise<any>) => {
             const req = ctx.call.metadata;
-            const traceId = Trace.createTraceId(
+            const traceId = lib.createTraceId(
                 lib.GrpcMetadata.containsRequired(req),
                 lib.GrpcMetadata.getValue(req, zipkin.HttpHeaders.Flags),
                 tracer,
@@ -41,12 +40,10 @@ export class GrpcImpl extends ZipkinBase {
     }
 
     public createClient<T>(client: T, ctx?: object): T {
-
-        if (this.info.tracer === false) {
+        const tracer = TracerHelper.instance().getTracer();
+        if (tracer === null) {
             return client;
         }
-
-        const tracer = this.info.tracer as zipkin.Tracer;
 
         if (ctx
             && ctx.hasOwnProperty(zipkin.HttpHeaders.TraceId)

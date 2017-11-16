@@ -1,20 +1,14 @@
 import * as zipkin from 'zipkin';
 
-// /src/Trace.ts
-export function createTracer(endpoint: string, sampler?: number): zipkin.Tracer;
-
-export function createTraceId(isChildNode: boolean, flag: any, tracer: zipkin.Tracer, zipkinOption: (name: string) => zipkin.Option): zipkin.TraceId;
-
 // /src/instrumentation/abstract/InstrumentationBase.ts
 export interface TraceInfo {
-    tracer: zipkin.Tracer | false;
     serviceName?: string;
+    port?: number;
     remoteService?: {
         serviceName?: string;
         host?: string;
         port?: number;
     };
-    port?: number;
 }
 
 export interface Middleware {
@@ -26,9 +20,12 @@ interface RecordBinaryMap {
 }
 
 declare abstract class ZipkinBase {
-    protected info: TraceInfo;
 
-    public constructor(info: TraceInfo);
+    public constructor();
+
+    public static initTracerInfo(endpoint: string, info: TraceInfo): void;
+
+    public static setTracerInfo(info: TraceInfo): void;
 
     public abstract createMiddleware(): Middleware;
 

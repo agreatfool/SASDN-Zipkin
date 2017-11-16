@@ -3,21 +3,35 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const zipkin = require("zipkin");
 const lib = require("../../lib/lib");
-exports.defaultTraceInfo = {
-    tracer: false,
-    serviceName: 'unknown',
-    port: 0,
-};
+const TracerHelper_1 = require("../../TracerHelper");
 class ZipkinBase {
-    constructor(info = exports.defaultTraceInfo) {
-        this.info = info;
+    constructor() {
     }
+    static initTracerInfo(endpoint, info) {
+        TracerHelper_1.TracerHelper.instance().init(endpoint, info);
+    }
+    ;
+    static setTracerInfo(info) {
+        if (info.serviceName) {
+            TracerHelper_1.TracerHelper.instance().setServiceName(info.serviceName);
+        }
+        if (info.port) {
+            TracerHelper_1.TracerHelper.instance().setPort(info.port);
+        }
+        if (info.remoteService) {
+            TracerHelper_1.TracerHelper.instance().setRemoteService(info.remoteService);
+        }
+    }
+    ;
     loggerServerReceive(traceId, method, recordBinarys = {}) {
-        const tracer = this.info.tracer;
-        const serviceName = this.info.serviceName || 'unknown';
-        const port = this.info.port || 0;
+        const info = TracerHelper_1.TracerHelper.instance().getTraceInfo();
+        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
+        const serviceName = info.serviceName || 'unknown';
+        const port = info.port || 0;
         tracer.scoped(() => {
             tracer.setId(traceId);
+            console.log('loggerServerReceive', traceId.traceId);
+            console.log('serviceName', serviceName);
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }
@@ -32,9 +46,10 @@ class ZipkinBase {
     }
     ;
     loggerServerSend(traceId, recordBinarys = {}) {
-        const tracer = this.info.tracer;
+        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
         tracer.scoped(() => {
             tracer.setId(traceId);
+            console.log('loggerServerSend', traceId.traceId);
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }
@@ -43,12 +58,16 @@ class ZipkinBase {
     }
     ;
     loggerClientSend(traceId, method, recordBinarys = {}) {
-        const tracer = this.info.tracer;
-        const serviceName = this.info.serviceName || 'unknown';
-        const remoteService = this.info.remoteService || null;
-        const port = this.info.port || 0;
+        const info = TracerHelper_1.TracerHelper.instance().getTraceInfo();
+        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
+        const serviceName = info.serviceName || 'unknown';
+        const remoteService = info.remoteService || null;
+        const port = info.port || 0;
         tracer.scoped(() => {
             tracer.setId(traceId);
+            console.log('loggerClientSend', traceId.traceId);
+            console.log('serviceName', serviceName);
+            console.log('remoteService', remoteService);
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }
@@ -70,9 +89,10 @@ class ZipkinBase {
     }
     ;
     loggerClientReceive(traceId, recordBinarys = {}) {
-        const tracer = this.info.tracer;
+        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
         tracer.scoped(() => {
             tracer.setId(traceId);
+            console.log('loggerClientReceive', traceId.traceId);
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }

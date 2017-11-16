@@ -28,6 +28,39 @@ function buildZipkinOption(value) {
     }
 }
 exports.buildZipkinOption = buildZipkinOption;
+function createTraceId(isChildNode, flag, tracer, zipkinOption) {
+    if (isChildNode) {
+        const spanId = zipkinOption(zipkin.HttpHeaders.SpanId);
+        spanId.ifPresent((sid) => {
+            const childId = new zipkin.TraceId({
+                traceId: zipkinOption(zipkin.HttpHeaders.TraceId),
+                parentId: zipkinOption(zipkin.HttpHeaders.ParentSpanId),
+                spanId: sid,
+                sampled: zipkinOption(zipkin.HttpHeaders.Sampled).map(stringToBoolean),
+                flags: zipkinOption(zipkin.HttpHeaders.Flags).flatMap(stringToIntOption).getOrElse(0)
+            });
+            tracer.setId(childId);
+        });
+    }
+    else {
+        const rootId = tracer.createRootId();
+        if (flag) {
+            const rootIdWithFlags = new zipkin.TraceId({
+                traceId: rootId.traceId,
+                parentId: rootId.parentId,
+                spanId: rootId.spanId,
+                sampled: rootId.sampled,
+                flags: zipkinOption(zipkin.HttpHeaders.Flags)
+            });
+            tracer.setId(rootIdWithFlags);
+        }
+        else {
+            tracer.setId(rootId);
+        }
+    }
+    return tracer.id;
+}
+exports.createTraceId = createTraceId;
 var GrpcMetadata;
 (function (GrpcMetadata) {
     function getValue(metadata, headerName) {

@@ -12,20 +12,19 @@ const zipkin = require("zipkin");
 const url = require("url");
 const ZipkinBase_1 = require("./abstract/ZipkinBase");
 const lib = require("../lib/lib");
-const Trace = require("../Trace");
+const TracerHelper_1 = require("../TracerHelper");
 class KoaImpl extends ZipkinBase_1.ZipkinBase {
     createMiddleware() {
-        if (this.info.tracer === false) {
+        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
+        if (tracer === null) {
             return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
                 yield next();
             });
         }
-        // Set value
-        const tracer = this.info.tracer;
         return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
             const req = ctx.request;
             const res = ctx.response;
-            const traceId = Trace.createTraceId(lib.HttpHeader.containsRequired(req), lib.HttpHeader.getValue(req, zipkin.HttpHeaders.Flags), tracer, (name) => {
+            const traceId = lib.createTraceId(lib.HttpHeader.containsRequired(req), lib.HttpHeader.getValue(req, zipkin.HttpHeaders.Flags), tracer, (name) => {
                 const value = lib.HttpHeader.getValue(req, name);
                 return lib.buildZipkinOption(value);
             });

@@ -10,10 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const zipkin = require("zipkin");
 const url = require("url");
-const InstrumentationBase_1 = require("./abstract/InstrumentationBase");
+const ZipkinBase_1 = require("./abstract/ZipkinBase");
 const lib = require("../lib/lib");
 const Trace = require("../Trace");
-class KoaImplExtendInstrumentationBase extends InstrumentationBase_1.InstrumentationBase {
+class KoaImpl extends ZipkinBase_1.ZipkinBase {
     createMiddleware() {
         if (this.info.tracer === false) {
             return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
@@ -27,7 +27,7 @@ class KoaImplExtendInstrumentationBase extends InstrumentationBase_1.Instrumenta
             const res = ctx.response;
             const traceId = Trace.createTraceId(lib.HttpHeader.containsRequired(req), lib.HttpHeader.getValue(req, zipkin.HttpHeaders.Flags), tracer, (name) => {
                 const value = lib.HttpHeader.getValue(req, name);
-                return Trace.buildZipkinOption(value);
+                return lib.buildZipkinOption(value);
             });
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
             this.loggerServerReceive(traceId, req.method.toUpperCase(), {
@@ -52,4 +52,4 @@ class KoaImplExtendInstrumentationBase extends InstrumentationBase_1.Instrumenta
         });
     }
 }
-exports.KoaImplExtendInstrumentationBase = KoaImplExtendInstrumentationBase;
+exports.KoaImpl = KoaImpl;

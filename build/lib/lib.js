@@ -19,6 +19,15 @@ function replaceRecordBinaryKey(str) {
     return str.replace(/\./g, '_');
 }
 exports.replaceRecordBinaryKey = replaceRecordBinaryKey;
+function buildZipkinOption(value) {
+    if (value != null) {
+        return new zipkin.option.Some(value);
+    }
+    else {
+        return zipkin.option.None;
+    }
+}
+exports.buildZipkinOption = buildZipkinOption;
 var GrpcMetadata;
 (function (GrpcMetadata) {
     function getValue(metadata, headerName) {

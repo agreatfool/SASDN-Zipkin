@@ -10,10 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const zipkin = require("zipkin");
 const grpc = require("grpc");
-const InstrumentationBase_1 = require("./abstract/InstrumentationBase");
+const ZipkinBase_1 = require("./abstract/ZipkinBase");
 const lib = require("../lib/lib");
 const Trace = require("../Trace");
-class GrpcImplExtendInstrumentationBase extends InstrumentationBase_1.InstrumentationBase {
+class GrpcImpl extends ZipkinBase_1.ZipkinBase {
     createMiddleware() {
         if (this.info.tracer === false) {
             return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
@@ -25,7 +25,7 @@ class GrpcImplExtendInstrumentationBase extends InstrumentationBase_1.Instrument
             const req = ctx.call.metadata;
             const traceId = Trace.createTraceId(lib.GrpcMetadata.containsRequired(req), lib.GrpcMetadata.getValue(req, zipkin.HttpHeaders.Flags), tracer, (name) => {
                 const value = lib.GrpcMetadata.getValue(req, name);
-                return Trace.buildZipkinOption(value);
+                return lib.buildZipkinOption(value);
             });
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
             this.loggerServerReceive(traceId, 'rpc');
@@ -102,4 +102,4 @@ class GrpcImplExtendInstrumentationBase extends InstrumentationBase_1.Instrument
         return [argus[0], metadata, callback(argus.length == 2 ? argus[1] : argus[2])];
     }
 }
-exports.GrpcImplExtendInstrumentationBase = GrpcImplExtendInstrumentationBase;
+exports.GrpcImpl = GrpcImpl;

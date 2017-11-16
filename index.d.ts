@@ -1,8 +1,6 @@
 import * as zipkin from 'zipkin';
 
 // /src/Trace.ts
-export function buildZipkinOption(value: string): zipkin.Option;
-
 export function createTracer(endpoint: string, sampler?: number): zipkin.Tracer;
 
 export function createTraceId(isChildNode: boolean, flag: any, tracer: zipkin.Tracer, zipkinOption: (name: string) => zipkin.Option): zipkin.TraceId;
@@ -27,7 +25,7 @@ interface RecordBinaryMap {
     [key: string]: string;
 }
 
-declare abstract class InstrumentationBase {
+declare abstract class ZipkinBase {
     protected info: TraceInfo;
 
     public constructor(info: TraceInfo);
@@ -45,19 +43,19 @@ declare abstract class InstrumentationBase {
     protected loggerClientReceive(traceId: zipkin.TraceId, recordBinarys: RecordBinaryMap): void;
 }
 
-export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
+export class GrpcImpl extends ZipkinBase {
     public createMiddleware(): Middleware;
 
     public createClient<T>(client: T, ctx?: object): T;
 }
 
-export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
+export class KoaImpl extends ZipkinBase {
     public createMiddleware(): Middleware;
 
     public createClient<T>(client: T, ctx?: object): T;
 }
 
-export class TypeOrmImplExtendInstrumentationBase extends InstrumentationBase {
+export class TypeOrmImpl extends ZipkinBase {
     public createMiddleware(): Middleware;
 
     public createClient<T>(client: T, ctx?: object): T;

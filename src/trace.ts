@@ -1,19 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const zipkin = require("zipkin");
-const TransportHttp = require("zipkin-transport-http");
-const CLSContext = require("zipkin-context-cls");
-const lib = require("./lib/lib");
-function buildZipkinOption(value) {
-    if (value != null) {
-        return new zipkin.option.Some(value);
-    }
-    else {
-        return zipkin.option.None;
-    }
-}
-exports.buildZipkinOption = buildZipkinOption;
-function createTracer(endpoint, sampler = 1) {
+import * as zipkin from 'zipkin';
+import * as TransportHttp from 'zipkin-transport-http';
+import * as CLSContext from 'zipkin-context-cls';
+import * as lib from './lib/lib';
+
+export function createTracer(endpoint: string, sampler: number = 1): zipkin.Tracer {
     return new zipkin.Tracer({
         ctxImpl: new CLSContext('zipkin'),
         recorder: new zipkin.BatchRecorder({
@@ -25,12 +15,12 @@ function createTracer(endpoint, sampler = 1) {
         sampler: new zipkin.sampler.CountingSampler(sampler),
     });
 }
-exports.createTracer = createTracer;
-function createTraceId(isChildNode, flag, tracer, zipkinOption) {
+
+export function createTraceId(isChildNode: boolean, flag: any, tracer: zipkin.Tracer, zipkinOption: (name: string) => zipkin.Option): zipkin.TraceId {
     if (isChildNode) {
         const spanId = zipkinOption(zipkin.HttpHeaders.SpanId);
-        spanId.ifPresent((sid) => {
-            const childId = new zipkin.TraceId({
+        spanId.ifPresent((sid: zipkin.spanId) => {
+            const childId =  new zipkin.TraceId({
                 traceId: zipkinOption(zipkin.HttpHeaders.TraceId),
                 parentId: zipkinOption(zipkin.HttpHeaders.ParentSpanId),
                 spanId: sid,
@@ -39,8 +29,7 @@ function createTraceId(isChildNode, flag, tracer, zipkinOption) {
             });
             tracer.setId(childId);
         });
-    }
-    else {
+    } else {
         const rootId = tracer.createRootId();
         if (flag) {
             const rootIdWithFlags = new zipkin.TraceId({
@@ -51,11 +40,10 @@ function createTraceId(isChildNode, flag, tracer, zipkinOption) {
                 flags: zipkinOption(zipkin.HttpHeaders.Flags)
             });
             tracer.setId(rootIdWithFlags);
-        }
-        else {
+        } else {
             tracer.setId(rootId);
         }
     }
+
     return tracer.id;
 }
-exports.createTraceId = createTraceId;

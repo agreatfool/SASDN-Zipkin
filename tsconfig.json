@@ -4,7 +4,7 @@
     "module": "commonjs",
     "sourceMap": false,
     "rootDir": "src",
-    "outDir": "lib",
+    "outDir": "build",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },

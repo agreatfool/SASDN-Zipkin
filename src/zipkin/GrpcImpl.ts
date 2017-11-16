@@ -1,6 +1,6 @@
 import * as zipkin from 'zipkin';
 import * as grpc from 'grpc';
-import {InstrumentationBase} from './abstract/InstrumentationBase';
+import {ZipkinBase} from './abstract/ZipkinBase';
 import * as lib from '../lib/lib';
 import * as Trace from '../Trace';
 
@@ -8,7 +8,7 @@ export declare class GrpcContext {
     call: grpc.IServerCall;
 }
 
-export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
+export class GrpcImpl extends ZipkinBase {
 
     public createMiddleware() {
         if (this.info.tracer === false) {
@@ -27,7 +27,7 @@ export class GrpcImplExtendInstrumentationBase extends InstrumentationBase {
                 tracer,
                 (name: string) => {
                     const value = lib.GrpcMetadata.getValue(req, name);
-                    return Trace.buildZipkinOption(value);
+                    return lib.buildZipkinOption(value);
                 }
             );
             ctx[zipkin.HttpHeaders.TraceId] = traceId;

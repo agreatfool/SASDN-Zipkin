@@ -1,11 +1,11 @@
 import * as zipkin from 'zipkin';
 import * as url from 'url';
 import {Context as KoaContext, Request as KoaRequest} from 'koa';
-import {InstrumentationBase, Middleware} from './abstract/InstrumentationBase';
+import {ZipkinBase, Middleware} from './abstract/ZipkinBase';
 import * as lib from '../lib/lib';
 import * as Trace from '../Trace';
 
-export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
+export class KoaImpl extends ZipkinBase {
 
     public createMiddleware(): Middleware {
         if (this.info.tracer === false) {
@@ -28,7 +28,7 @@ export class KoaImplExtendInstrumentationBase extends InstrumentationBase {
                 tracer,
                 (name: string) => {
                     const value = lib.HttpHeader.getValue(req, name);
-                    return Trace.buildZipkinOption(value);
+                    return lib.buildZipkinOption(value);
                 }
             );
             ctx[zipkin.HttpHeaders.TraceId] = traceId;

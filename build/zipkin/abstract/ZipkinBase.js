@@ -71,9 +71,9 @@ class ZipkinBase {
             tracer.recordAnnotation(new zipkin.Annotation.LocalAddr({ port }));
             if (remoteService) {
                 tracer.recordAnnotation(new zipkin.Annotation.ServerAddr({
-                    serviceName: remoteService.serviceName,
-                    host: new zipkin.InetAddress(remoteService.host),
-                    port: remoteService.port
+                    serviceName: (remoteService.serviceName) ? remoteService.serviceName : null,
+                    host: (remoteService.host) ? new zipkin.InetAddress(remoteService.host) : null,
+                    port: (remoteService.port) ? remoteService.port : null,
                 }));
             }
             if (traceId.flags !== 0 && traceId.flags != null) {

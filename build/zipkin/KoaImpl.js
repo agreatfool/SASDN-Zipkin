@@ -10,12 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const zipkin = require("zipkin");
 const url = require("url");
-const ZipkinBase_1 = require("./abstract/ZipkinBase");
 const lib = require("../lib/lib");
-const TracerHelper_1 = require("../TracerHelper");
+const ZipkinBase_1 = require("./abstract/ZipkinBase");
+const Trace_1 = require("../Trace");
 class KoaImpl extends ZipkinBase_1.ZipkinBase {
     createMiddleware() {
-        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
+        const tracer = Trace_1.Trace.instance.tracer;
         if (tracer === null) {
             return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
                 yield next();
@@ -24,16 +24,13 @@ class KoaImpl extends ZipkinBase_1.ZipkinBase {
         return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
             const req = ctx.request;
             const res = ctx.response;
-            const traceId = lib.createTraceId(lib.HttpHeader.containsRequired(req), lib.HttpHeader.getValue(req, zipkin.HttpHeaders.Flags), tracer, (name) => {
-                const value = lib.HttpHeader.getValue(req, name);
-                return lib.buildZipkinOption(value);
-            });
+            const traceId = lib.createTraceId(tracer, lib.HttpHeader.containsRequired(req), (name) => lib.HttpHeader.getValue(req, name));
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
-            this.loggerServerReceive(traceId, req.method.toUpperCase(), {
-                'http_url': this.formatRequestUrl(req)
+            this._logServerReceive(traceId, req.method.toUpperCase(), {
+                'http_url': this._formatRequestUrl(req)
             });
             yield next();
-            this.loggerServerSend(traceId, {
+            this._logServerSend(traceId, {
                 'http_status_code': res.status.toString()
             });
         });
@@ -41,7 +38,7 @@ class KoaImpl extends ZipkinBase_1.ZipkinBase {
     createClient(client, ctx) {
         throw new Error('Only the client type instrumentation are allowed to use createClient!');
     }
-    formatRequestUrl(req) {
+    _formatRequestUrl(req) {
         const parsed = url.parse(req.originalUrl);
         return url.format({
             protocol: req.protocol,

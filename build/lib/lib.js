@@ -15,10 +15,10 @@ function stringToIntOption(str) {
     }
 }
 exports.stringToIntOption = stringToIntOption;
-function replaceRecordBinaryKey(str) {
+function replaceDotToUnderscore(str) {
     return str.replace(/\./g, '_');
 }
-exports.replaceRecordBinaryKey = replaceRecordBinaryKey;
+exports.replaceDotToUnderscore = replaceDotToUnderscore;
 function buildZipkinOption(value) {
     if (value != null) {
         return new zipkin.option.Some(value);
@@ -28,29 +28,41 @@ function buildZipkinOption(value) {
     }
 }
 exports.buildZipkinOption = buildZipkinOption;
-function createTraceId(isChildNode, flag, tracer, zipkinOption) {
-    if (isChildNode) {
-        const spanId = zipkinOption(zipkin.HttpHeaders.SpanId);
+/**
+ * 根据外部数据（头信息或元数据）创建一个 child traceId。
+ * 如果外部数据不存在，则创建一个全新的 traceId。
+ *
+ * @param {zipkin.Tracer} tracer
+ * @param {boolean} isChild
+ * @param {(name: string) => any} getValue
+ * @returns {zipkin.TraceId}
+ */
+function createTraceId(tracer, isChild, getValue) {
+    function getZipkinOption(name) {
+        return buildZipkinOption(getValue(name));
+    }
+    if (isChild) {
+        const spanId = getZipkinOption(zipkin.HttpHeaders.SpanId);
         spanId.ifPresent((sid) => {
             const childId = new zipkin.TraceId({
-                traceId: zipkinOption(zipkin.HttpHeaders.TraceId),
-                parentId: zipkinOption(zipkin.HttpHeaders.ParentSpanId),
+                traceId: getZipkinOption(zipkin.HttpHeaders.TraceId),
+                parentId: getZipkinOption(zipkin.HttpHeaders.ParentSpanId),
                 spanId: sid,
-                sampled: zipkinOption(zipkin.HttpHeaders.Sampled).map(stringToBoolean),
-                flags: zipkinOption(zipkin.HttpHeaders.Flags).flatMap(stringToIntOption).getOrElse(0)
+                sampled: getZipkinOption(zipkin.HttpHeaders.Sampled).map(stringToBoolean),
+                flags: getZipkinOption(zipkin.HttpHeaders.Flags).flatMap(stringToIntOption).getOrElse(0)
             });
             tracer.setId(childId);
         });
     }
     else {
         const rootId = tracer.createRootId();
-        if (flag) {
+        if (getValue(zipkin.HttpHeaders.Flags)) {
             const rootIdWithFlags = new zipkin.TraceId({
                 traceId: rootId.traceId,
                 parentId: rootId.parentId,
                 spanId: rootId.spanId,
                 sampled: rootId.sampled,
-                flags: zipkinOption(zipkin.HttpHeaders.Flags)
+                flags: getZipkinOption(zipkin.HttpHeaders.Flags)
             });
             tracer.setId(rootIdWithFlags);
         }

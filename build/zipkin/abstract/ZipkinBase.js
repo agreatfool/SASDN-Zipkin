@@ -30,8 +30,6 @@ class ZipkinBase {
         const port = info.port || 0;
         tracer.scoped(() => {
             tracer.setId(traceId);
-            console.log('loggerServerReceive', traceId.traceId);
-            console.log('serviceName', serviceName);
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }
@@ -49,7 +47,6 @@ class ZipkinBase {
         const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
         tracer.scoped(() => {
             tracer.setId(traceId);
-            console.log('loggerServerSend', traceId.traceId);
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }
@@ -65,9 +62,6 @@ class ZipkinBase {
         const port = info.port || 0;
         tracer.scoped(() => {
             tracer.setId(traceId);
-            console.log('loggerClientSend', traceId.traceId);
-            console.log('serviceName', serviceName);
-            console.log('remoteService', remoteService);
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }
@@ -92,7 +86,6 @@ class ZipkinBase {
         const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
         tracer.scoped(() => {
             tracer.setId(traceId);
-            console.log('loggerClientReceive', traceId.traceId);
             for (const key in recordBinarys) {
                 tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
             }

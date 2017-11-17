@@ -3,77 +3,122 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const zipkin = require("zipkin");
 const lib = require("../../lib/lib");
-const TracerHelper_1 = require("../../TracerHelper");
+const Trace_1 = require("../../Trace");
 class ZipkinBase {
     constructor() {
     }
-    static initTracerInfo(endpoint, info) {
-        TracerHelper_1.TracerHelper.instance().init(endpoint, info);
+    /**
+     * 初始化 Trace 数据
+     *
+     * @param {string} url Zipkin Collector API url.
+     * @param {ServiceInfo} serviceInfo
+     */
+    static init(url, serviceInfo) {
+        Trace_1.Trace.instance.init(url, serviceInfo);
     }
     ;
-    static setTracerInfo(info) {
-        if (info.serviceName) {
-            TracerHelper_1.TracerHelper.instance().setServiceName(info.serviceName);
-        }
-        if (info.port) {
-            TracerHelper_1.TracerHelper.instance().setPort(info.port);
-        }
-        if (info.remoteService) {
-            TracerHelper_1.TracerHelper.instance().setRemoteService(info.remoteService);
-        }
+    /**
+     * 更新 Trace 的 Receiver 数据
+     *
+     * @param {ServiceInfo} serviceInfo
+     */
+    static setReceiverServiceInfo(serviceInfo) {
+        Trace_1.Trace.instance.setReceiverServiceInfo(serviceInfo);
     }
-    ;
-    loggerServerReceive(traceId, method, recordBinarys = {}) {
-        const info = TracerHelper_1.TracerHelper.instance().getTraceInfo();
-        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
-        const serviceName = info.serviceName || 'unknown';
-        const port = info.port || 0;
+    /**
+     * 添加自定义的 RecordMap
+     *
+     * @param {RecordMap} recordMap
+     */
+    setCustomizedRecordMap(recordMap) {
+        this._customizedRecordMap = recordMap;
+    }
+    /**
+     * 记录 Zipkin ServerRecv 事件
+     *
+     * @param {zipkin.TraceId} traceId
+     * @param {string} method
+     * @param {RecordMap} records
+     * @private
+     */
+    _logServerReceive(traceId, method, records = {}) {
+        const tracer = Trace_1.Trace.instance.tracer;
+        const { serviceName, host, port } = Trace_1.Trace.instance.currentServiceInfo;
         tracer.scoped(() => {
             tracer.setId(traceId);
-            for (const key in recordBinarys) {
-                tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
+            for (const key in this._customizedRecordMap) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedRecordMap[key]);
             }
-            tracer.recordServiceName(serviceName);
+            for (const key in records) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), records[key]);
+            }
+            tracer.recordServiceName(serviceName || 'unknown');
             tracer.recordRpc(method);
             tracer.recordAnnotation(new zipkin.Annotation.ServerRecv());
-            tracer.recordAnnotation(new zipkin.Annotation.LocalAddr({ port }));
+            tracer.recordAnnotation(new zipkin.Annotation.LocalAddr({
+                host: (host) ? new zipkin.InetAddress(host) : null,
+                port: port || 0
+            }));
             if (traceId.flags !== 0 && traceId.flags != null) {
                 tracer.recordBinary(zipkin.HttpHeaders.Flags, traceId.flags);
             }
         });
     }
     ;
-    loggerServerSend(traceId, recordBinarys = {}) {
-        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
+    /**
+     * 记录 Zipkin ServerSend 事件
+     *
+     * @param {zipkin.TraceId} traceId
+     * @param {string} method
+     * @param {RecordMap} records
+     * @private
+     */
+    _logServerSend(traceId, records = {}) {
+        const tracer = Trace_1.Trace.instance.tracer;
         tracer.scoped(() => {
             tracer.setId(traceId);
-            for (const key in recordBinarys) {
-                tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
+            for (const key in this._customizedRecordMap) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedRecordMap[key]);
+            }
+            for (const key in records) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), records[key]);
             }
             tracer.recordAnnotation(new zipkin.Annotation.ServerSend());
         });
     }
     ;
-    loggerClientSend(traceId, method, recordBinarys = {}) {
-        const info = TracerHelper_1.TracerHelper.instance().getTraceInfo();
-        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
-        const serviceName = info.serviceName || 'unknown';
-        const remoteService = info.remoteService || null;
-        const port = info.port || 0;
+    /**
+     * 记录 Zipkin Client Send 事件
+     *
+     * @param {zipkin.TraceId} traceId
+     * @param {string} method
+     * @param {RecordMap} records
+     * @private
+     */
+    _logClientSend(traceId, method, records = {}) {
+        const tracer = Trace_1.Trace.instance.tracer;
+        const { serviceName, host, port } = Trace_1.Trace.instance.currentServiceInfo;
         tracer.scoped(() => {
             tracer.setId(traceId);
-            for (const key in recordBinarys) {
-                tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
+            for (const key in this._customizedRecordMap) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedRecordMap[key]);
             }
-            tracer.recordServiceName(serviceName);
+            for (const key in records) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), records[key]);
+            }
+            tracer.recordServiceName(serviceName || 'unknown');
             tracer.recordRpc(method);
             tracer.recordAnnotation(new zipkin.Annotation.ClientSend());
-            tracer.recordAnnotation(new zipkin.Annotation.LocalAddr({ port }));
-            if (remoteService) {
+            tracer.recordAnnotation(new zipkin.Annotation.LocalAddr({
+                host: (host) ? new zipkin.InetAddress(host) : null,
+                port: port || 0
+            }));
+            const receiverServiceInfo = Trace_1.Trace.instance.receiverServiceInfo;
+            if (receiverServiceInfo) {
                 tracer.recordAnnotation(new zipkin.Annotation.ServerAddr({
-                    serviceName: (remoteService.serviceName) ? remoteService.serviceName : null,
-                    host: (remoteService.host) ? new zipkin.InetAddress(remoteService.host) : null,
-                    port: (remoteService.port) ? remoteService.port : null,
+                    serviceName: receiverServiceInfo.serviceName || 'unknown',
+                    host: (receiverServiceInfo.host) ? new zipkin.InetAddress(receiverServiceInfo.host) : null,
+                    port: receiverServiceInfo.port || 0
                 }));
             }
             if (traceId.flags !== 0 && traceId.flags != null) {
@@ -82,12 +127,22 @@ class ZipkinBase {
         });
     }
     ;
-    loggerClientReceive(traceId, recordBinarys = {}) {
-        const tracer = TracerHelper_1.TracerHelper.instance().getTracer();
+    /**
+     * 记录 Zipkin Client Recv 事件
+     *
+     * @param {zipkin.TraceId} traceId
+     * @param {RecordMap} records
+     * @private
+     */
+    _logClientReceive(traceId, records = {}) {
+        const tracer = Trace_1.Trace.instance.tracer;
         tracer.scoped(() => {
             tracer.setId(traceId);
-            for (const key in recordBinarys) {
-                tracer.recordBinary(lib.replaceRecordBinaryKey(key), recordBinarys[key]);
+            for (const key in this._customizedRecordMap) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedRecordMap[key]);
+            }
+            for (const key in records) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), records[key]);
             }
             tracer.recordAnnotation(new zipkin.Annotation.ClientRecv());
         });

@@ -2,17 +2,24 @@ import * as zipkin from 'zipkin';
 import * as grpc from 'grpc';
 import {ZipkinBase} from './abstract/ZipkinBase';
 import * as lib from '../lib/lib';
-import {TracerHelper} from '../TracerHelper';
+import {Trace} from '../Trace';
 
 export declare class GrpcContext {
     call: grpc.IServerCall;
 }
 
+export declare type GrpcClient = grpc.Client;
+
 export class GrpcImpl extends ZipkinBase {
 
+    /**
+     * 创建服务器中间件
+     *
+     * @returns {(ctx: GrpcContext, next: () => Promise<any>) => Promise<any>}
+     */
     public createMiddleware() {
-        const tracer = TracerHelper.instance().getTracer();
-        if (tracer === null) {
+        const tracer = Trace.instance.tracer;
+        if (!tracer) {
             return async (ctx: GrpcContext, next: () => Promise<any>) => {
                 await next();
             };
@@ -20,55 +27,74 @@ export class GrpcImpl extends ZipkinBase {
 
         return async (ctx: GrpcContext, next: () => Promise<any>) => {
             const req = ctx.call.metadata;
+
             const traceId = lib.createTraceId(
-                lib.GrpcMetadata.containsRequired(req),
-                lib.GrpcMetadata.getValue(req, zipkin.HttpHeaders.Flags),
                 tracer,
-                (name: string) => {
-                    const value = lib.GrpcMetadata.getValue(req, name);
-                    return lib.buildZipkinOption(value);
-                }
+                lib.GrpcMetadata.containsRequired(req),
+                (name: string) => lib.GrpcMetadata.getValue(req, name),
             );
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
 
-            this.loggerServerReceive(traceId, 'rpc');
+            this._logServerReceive(traceId, 'rpc');
 
             await next();
 
-            this.loggerServerSend(traceId);
+            this._logServerSend(traceId);
         };
     }
 
-    public createClient<T>(client: T, ctx?: object): T {
-        const tracer = TracerHelper.instance().getTracer();
-        if (tracer === null) {
+    /**
+     * 创建客户端中间件
+     *
+     * @param {GrpcClient} client
+     * @param {Object} ctx
+     * @returns {GrpcClient}
+     */
+    public createClient<GrpcClient>(client: GrpcClient, ctx?: object): GrpcClient {
+        const tracer = Trace.instance.tracer;
+        if (!tracer) {
+            console.log('Return normal client.');
             return client;
         }
 
+        // 判断 ctx 中是否存在 traceId，如果存在则这个代理客户端会根据 traceId 生成一个 child traceId
         if (ctx
             && ctx.hasOwnProperty(zipkin.HttpHeaders.TraceId)
             && ctx[zipkin.HttpHeaders.TraceId] instanceof zipkin.TraceId) {
             tracer.setId(ctx[zipkin.HttpHeaders.TraceId]);
         }
 
+        // 遍历 grpcClient 中的所有方法，找到 APICall 方法并进行参数改造
         Object.getOwnPropertyNames(Object.getPrototypeOf(client)).forEach((property) => {
             const original = client[property];
             if (property != 'constructor' && typeof original == 'function') {
-                const _this = this;
-                client[property] = function () {
+
+                function proxyGrpcCall() {
                     // create SpanId
                     tracer.setId(tracer.createChildId());
                     const traceId = tracer.id;
 
-                    _this.loggerClientSend(traceId, 'rpc', {
+                    this._logClientSend(traceId, 'rpc', {
                         'rpc_query': property,
                         'rpc_query_params': JSON.stringify(arguments)
                     });
 
-                    const argus = _this.updateArgumentWithMetadata(arguments, traceId, (callback) => {
+                    /**
+                     * argument 参数对应的是 APICall 的所有参数
+                     * <pre>
+                     *     1. { params, grpcCallback }
+                     *     2. { params, metadata, grpcCallback }
+                     * </pre>
+                     *
+                     * 参数改造后，统一变成 { params, metadata, proxyGrpcCallback }
+                     * params 参数维持不变
+                     * metadata 参数增加 traceId 相关属性
+                     * proxyGrpcCallback 参数拦截了APICall 的 grpcCallback，并分别在 grpcCallback 前，和返回结果后，增加 zipkin 日志
+                     */
+                    const argus = this._updateArgumentWithMetadata(arguments, traceId, (callback) => {
                         return (err: Error, res: any) => {
                             if (err) {
-                                _this.loggerClientReceive(traceId, {
+                                this._logClientReceive(traceId, {
                                     'rpc_end': `Error`,
                                     'rpc_end_response': err.message
                                 });
@@ -80,7 +106,7 @@ export class GrpcImpl extends ZipkinBase {
                                     resObj = res.toString();
                                 }
 
-                                _this.loggerClientReceive(traceId, {
+                                this._logClientReceive(traceId, {
                                     'rpc_end': `Callback`,
                                     'rpc_end_response': resObj
                                 });
@@ -92,18 +118,20 @@ export class GrpcImpl extends ZipkinBase {
                     const call = original.apply(client, argus);
 
                     call.on('end', () => {
-                        _this.loggerClientReceive(traceId, {
+                        this._logClientReceive(traceId, {
                             'rpc_end': `Call`,
                         });
                     });
-                };
+                }
+
+                client[property] = proxyGrpcCall.bind(this);
             }
         });
 
         return client;
     }
 
-    private updateArgumentWithMetadata(argus: IArguments, traceId: zipkin.TraceId, callback: Function): Array<any> {
+    private _updateArgumentWithMetadata(argus: IArguments, traceId: zipkin.TraceId, callback: Function): Array<any> {
         // argument length is 2 or 3
         // {'0': params, '1': function callback}
         // {'0': params, '1': metadata '2': function callback}

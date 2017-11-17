@@ -1,14 +1,14 @@
 import * as zipkin from 'zipkin';
 import * as url from 'url';
 import {Context as KoaContext, Request as KoaRequest} from 'koa';
-import {ZipkinBase, Middleware} from './abstract/ZipkinBase';
 import * as lib from '../lib/lib';
-import {TracerHelper} from '../TracerHelper';
+import {ZipkinBase} from './abstract/ZipkinBase';
+import {Trace} from '../Trace';
 
 export class KoaImpl extends ZipkinBase {
 
-    public createMiddleware(): Middleware {
-        const tracer = TracerHelper.instance().getTracer();
+    public createMiddleware() {
+        const tracer = Trace.instance.tracer;
         if (tracer === null) {
             return async (ctx: KoaContext, next: () => Promise<any>) => {
                 await next();
@@ -20,23 +20,19 @@ export class KoaImpl extends ZipkinBase {
             const res = ctx.response;
 
             const traceId = lib.createTraceId(
-                lib.HttpHeader.containsRequired(req),
-                lib.HttpHeader.getValue(req, zipkin.HttpHeaders.Flags),
                 tracer,
-                (name: string) => {
-                    const value = lib.HttpHeader.getValue(req, name);
-                    return lib.buildZipkinOption(value);
-                }
+                lib.HttpHeader.containsRequired(req),
+                (name: string) => lib.HttpHeader.getValue(req, name)
             );
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
 
-            this.loggerServerReceive(traceId, req.method.toUpperCase(), {
-                'http_url': this.formatRequestUrl(req)
+            this._logServerReceive(traceId, req.method.toUpperCase(), {
+                'http_url': this._formatRequestUrl(req)
             });
 
             await next();
 
-            this.loggerServerSend(traceId, {
+            this._logServerSend(traceId, {
                 'http_status_code': res.status.toString()
             });
         };
@@ -46,7 +42,7 @@ export class KoaImpl extends ZipkinBase {
         throw new Error('Only the client type instrumentation are allowed to use createClient!');
     }
 
-    private formatRequestUrl(req: KoaRequest): string {
+    private _formatRequestUrl(req: KoaRequest): string {
         const parsed = url.parse(req.originalUrl);
         return url.format({
             protocol: req.protocol,

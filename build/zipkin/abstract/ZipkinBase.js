@@ -6,10 +6,10 @@ const lib = require("../../lib/lib");
 const Trace_1 = require("../../Trace");
 var ZIPKIN_EVENT;
 (function (ZIPKIN_EVENT) {
-    ZIPKIN_EVENT["SERVER_RECV"] = "sr";
-    ZIPKIN_EVENT["SERVER_SEND"] = "ss";
-    ZIPKIN_EVENT["CLIENT_SEND"] = "cs";
-    ZIPKIN_EVENT["CLIENT_RECV"] = "cr";
+    ZIPKIN_EVENT["SERVER_RECV"] = "ServerReceive";
+    ZIPKIN_EVENT["SERVER_SEND"] = "ServerSend";
+    ZIPKIN_EVENT["CLIENT_SEND"] = "ClientSend";
+    ZIPKIN_EVENT["CLIENT_RECV"] = "ClientReceive";
 })(ZIPKIN_EVENT = exports.ZIPKIN_EVENT || (exports.ZIPKIN_EVENT = {}));
 class ZipkinBase {
     constructor() {

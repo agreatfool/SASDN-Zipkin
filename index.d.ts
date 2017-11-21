@@ -7,10 +7,10 @@ interface RecordMap {
 }
 
 export enum ZIPKIN_EVENT {
-    SERVER_RECV = 'sr',
-    SERVER_SEND = 'ss',
-    CLIENT_SEND = 'cs',
-    CLIENT_RECV = 'cr'
+    SERVER_RECV = 'ServerReceive',
+    SERVER_SEND = 'ServerSend',
+    CLIENT_SEND = 'ClientSend',
+    CLIENT_RECV = 'ClientReceive'
 }
 
 export interface ServiceInfo {

@@ -15,14 +15,14 @@ $ npm install --save sasdn-zipkin
 import {RpcApplication} from 'sasdn';
 import {GrpcImpl} from 'sasdn-zipkin';
 
-GrpcImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
+GrpcImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',
   port: 0
 });
 
 const app = new RpcApplication();
 app.use(new GrpcImpl().createMiddleware());
-app.bind(`127.0.0.1:8080`).start();
+app.bind('127.0.0.1:8080').start();
 ```
 
 #### gRPC Client Proxy
@@ -158,7 +158,7 @@ import {GrpcImpl, ZIPKIN_EVENT} from 'sasdn-zipkin';
 import {OrderServiceClient} from './proto/order/order_grpc_pb';
 
 const zipkinImpl = new GrpcImpl();
-GrpcImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
+GrpcImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',
   port: 0
 });
@@ -194,7 +194,7 @@ import {createConnection} from 'typeorm';
 const entities = [];
 entities.push({UserEntity: UserEntity});
 
-TypeOrmImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
+TypeOrmImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',
   port: 0
 });
@@ -216,7 +216,7 @@ zipkinImpl.setCustomizedRecords(ZIPKIN_EVENT.CLIENT_RECV, {
 });
 const userEntity = await proxyConn.getRepository(UserEntity)
 	.createQueryBuilder('user')
-	.where(`user.id=:id`, {id: request.getId()})
+	.where('user.id=:id', {id: request.getId()})
 	.getOne();
 ```
 

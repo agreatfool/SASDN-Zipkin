@@ -11,6 +11,9 @@ export declare class GrpcContext {
 
 export declare type GrpcClient = grpc.Client;
 
+type GrpcCallback = (err: Error, res: any) => void;
+type ProxyGrpcCallback = (callback: GrpcCallback) => GrpcCallback;
+
 export class GrpcImpl extends ZipkinBase {
 
     /**
@@ -81,19 +84,13 @@ export class GrpcImpl extends ZipkinBase {
                     });
 
                     /**
-                     * argument 参数对应的是 APICall 的所有参数
-                     * <pre>
-                     *     1. { params, grpcCallback }
-                     *     2. { params, metadata, grpcCallback }
-                     * </pre>
+                     * 创建一个 ProxyGrpcCallback 方法用来拦截 grpcCallback，并在 grpcCallback 执行前后，增加 zipkin日志
                      *
-                     * 参数改造后，统一变成 { params, metadata, proxyGrpcCallback }
-                     * params 参数维持不变
-                     * metadata 参数增加 traceId 相关属性
-                     * proxyGrpcCallback 参数拦截了APICall 的 grpcCallback，并分别在 grpcCallback 前，和返回结果后，增加 zipkin 日志
+                     * @param {Function} callback
+                     * @returns {(err: Error, res: any) => void}
                      */
-                    const argus = this._updateArgumentWithMetadata(arguments, traceId, (callback) => {
-                        return (err: Error, res: any) => {
+                    const proxyGrpcCallback: ProxyGrpcCallback = (callback: GrpcCallback) => {
+                        return (err: Error, res: any): void => {
                             if (err) {
                                 this._logClientReceive(traceId, {
                                     'rpc_end': `Error`,
@@ -114,7 +111,21 @@ export class GrpcImpl extends ZipkinBase {
                             }
                             callback(err, res);
                         };
-                    });
+                    };
+
+                    /**
+                     * argument 参数对应的是 APICall 的所有参数
+                     * <pre>
+                     *     1. { params, grpcCallback }
+                     *     2. { params, metadata, grpcCallback }
+                     * </pre>
+                     *
+                     * 参数改造后，统一变成 { params, metadata, proxyGrpcCallback }
+                     * params 参数维持不变
+                     * metadata 参数增加 traceId 相关属性
+                     * proxyGrpcCallback 参数是一个拦截了 grpcCallback 的方法
+                     */
+                    const argus = this._updateArgumentWithMetadata(arguments, traceId, proxyGrpcCallback);
 
                     const call = original.apply(client, argus);
 
@@ -132,7 +143,7 @@ export class GrpcImpl extends ZipkinBase {
         return client;
     }
 
-    private _updateArgumentWithMetadata(argus: IArguments, traceId: zipkin.TraceId, callback: Function): Array<any> {
+    private _updateArgumentWithMetadata(argus: IArguments, traceId: zipkin.TraceId, callback: ProxyGrpcCallback): Array<any> {
         // argument length is 2 or 3
         // {'0': params, '1': function callback}
         // {'0': params, '1': metadata '2': function callback}

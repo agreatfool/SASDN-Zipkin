@@ -67,18 +67,12 @@ class GrpcImpl extends ZipkinBase_1.ZipkinBase {
                         'rpc_query_params': JSON.stringify(arguments)
                     });
                     /**
-                     * argument 参数对应的是 APICall 的所有参数
-                     * <pre>
-                     *     1. { params, grpcCallback }
-                     *     2. { params, metadata, grpcCallback }
-                     * </pre>
+                     * 创建一个 ProxyGrpcCallback 方法用来拦截 grpcCallback，并在 grpcCallback 执行前后，增加 zipkin日志
                      *
-                     * 参数改造后，统一变成 { params, metadata, proxyGrpcCallback }
-                     * params 参数维持不变
-                     * metadata 参数增加 traceId 相关属性
-                     * proxyGrpcCallback 参数拦截了APICall 的 grpcCallback，并分别在 grpcCallback 前，和返回结果后，增加 zipkin 日志
+                     * @param {Function} callback
+                     * @returns {(err: Error, res: any) => void}
                      */
-                    const argus = this._updateArgumentWithMetadata(arguments, traceId, (callback) => {
+                    const proxyGrpcCallback = (callback) => {
                         return (err, res) => {
                             if (err) {
                                 this._logClientReceive(traceId, {
@@ -101,7 +95,20 @@ class GrpcImpl extends ZipkinBase_1.ZipkinBase {
                             }
                             callback(err, res);
                         };
-                    });
+                    };
+                    /**
+                     * argument 参数对应的是 APICall 的所有参数
+                     * <pre>
+                     *     1. { params, grpcCallback }
+                     *     2. { params, metadata, grpcCallback }
+                     * </pre>
+                     *
+                     * 参数改造后，统一变成 { params, metadata, proxyGrpcCallback }
+                     * params 参数维持不变
+                     * metadata 参数增加 traceId 相关属性
+                     * proxyGrpcCallback 参数是一个拦截了 grpcCallback 的方法
+                     */
+                    const argus = this._updateArgumentWithMetadata(arguments, traceId, proxyGrpcCallback);
                     const call = original.apply(client, argus);
                     call.on('end', () => {
                         this._logClientReceive(traceId, {

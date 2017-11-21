@@ -13,11 +13,11 @@ $ npm install --save sasdn-zipkin
 
 ```typescript
 import {RpcApplication} from 'sasdn';
-import {GrpcImpl, ZIPKIN_EVENT} from 'sasdn-zipkin';
+import {GrpcImpl} from 'sasdn-zipkin';
 
-GrpcImpl.initTracerInfo(`http://127.0.0.1:9411/api/v1/spans`, {
-  serviceName: 'ms-user',
-  port: 0
+GrpcImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
+    serviceName: 'ms-user',
+    port: 0
 });
 
 const app = new RpcApplication();
@@ -28,15 +28,17 @@ app.bind(`127.0.0.1:8080`).start();
 #### gRPC Client Proxy
 
 ```typescript
-import {GrpcImpl, ZIPKIN_EVENT} from 'sasdn-zipkin';
+import {GrpcImpl} from 'sasdn-zipkin';
 import {OrderServiceClient} from './proto/order/order_grpc_pb';
 
-GrpcImpl.setTracerInfo({
-  remoteService: {
+GrpcImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
     serviceName: 'ms-user',
+    port: 0
+});
+GrpcImpl.setReceiverServiceInfo({
+    serviceName: 'ms-order',
     host: '127.0.0.1',
     port: 9090
-  }
 });
 
 const grpcClient = new OrderServiceClient('127.0.0.1:9090', grpc.credentials.createInsecure());
@@ -50,7 +52,7 @@ const proxyClient = new GrpcImpl().createClient(grpcClient, ctx);
 import * as Koa from 'koa';
 import {KoaImpl} from 'sasdn-zipkin';
 
-KoaImpl.initTracerInfo(`http://127.0.0.1:9411/api/v1/spans`, {
+KoaImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
     serviceName: 'ms-user',
     port: 0
 });
@@ -73,16 +75,18 @@ import {createConnection} from 'typeorm';
 const entities = [];
 entities.push({UserEntity: UserEntity});
 
-TypeOrmImpl.setTracerInfo({
-  remoteService: {
+TypeOrmImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
+    serviceName: 'ms-user',
+    port: 0
+});
+TypeOrmImpl.setReceiverServiceInfo({
     serviceName: 'sqlite'
-  }
 });
   
 const conn = await createConnection({
-  type: 'sqlite',
-  database: './User.db',
-  entities: entities,
+    type: 'sqlite',
+    database: './User.db',
+    entities: entities,
 });
 const proxyConn = new TypeOrmImpl().createClient(conn, ctx);
 ```
@@ -94,9 +98,9 @@ const proxyConn = new TypeOrmImpl().createClient(conn, ctx);
 import {RpcApplication} from 'sasdn';
 import {GrpcImpl, ZIPKIN_EVENT} from 'sasdn-zipkin';
 
-GrpcImpl.initTracerInfo(`http://127.0.0.1:9411/api/v1/spans`, {
-  serviceName: 'ms-user',
-  port: 0
+GrpcImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
+    serviceName: 'ms-user',
+    port: 0
 });
 
 const app = new RpcApplication();
@@ -121,12 +125,14 @@ app.bind(`127.0.0.1:8080`).start();
 import {GrpcImpl, ZIPKIN_EVENT} from 'sasdn-zipkin';
 import {OrderServiceClient} from './proto/order/order_grpc_pb';
 
-GrpcImpl.setTracerInfo({
-  remoteService: {
+GrpcImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
     serviceName: 'ms-user',
+    port: 0
+});
+GrpcImpl.setReceiverServiceInfo({
+    serviceName: 'ms-order',
     host: '127.0.0.1',
     port: 9090
-  }
 });
 
 const grpcClient = new OrderServiceClient('127.0.0.1:9090', grpc.credentials.createInsecure());
@@ -141,4 +147,6 @@ zipkinImple.setCustomizedRecords(ZIPKIN_EVENT.CLIENT_RECV, {
     test2: 'Client Receive'
 });
 const proxyClient = zipkinTmpl.createClient(grpcClient, ctx);
+
 ```
+

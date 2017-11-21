@@ -29,8 +29,12 @@ function buildZipkinOption(value) {
 }
 exports.buildZipkinOption = buildZipkinOption;
 /**
- * 根据外部数据（头信息或元数据）创建一个 child traceId。
- * 如果外部数据不存在，则创建一个全新的 traceId。
+ * 根据 isChild 判断是创建一个 child TraceId 还是创建一个全新的 TraceId。
+ * <pre>
+ * 当前节点是一个 grpc 服务器或 koa 服务器，
+ * 当服务器接收到请求时，从请求上下文的 metadata 或 header 检查 traceId 和 spanId 是否存在，
+ * 如果存在，则说明当前节点是一个子节点，isChild = true。
+ * </pre>
  *
  * @param {zipkin.Tracer} tracer
  * @param {boolean} isChild

@@ -1,5 +1,6 @@
 import * as zipkin from 'zipkin';
 import * as url from 'url';
+import {Middleware as KoaMiddleware} from 'koa';
 import {Context as KoaContext, Request as KoaRequest} from 'koa';
 import * as lib from '../lib/lib';
 import {ZipkinBase} from './abstract/ZipkinBase';
@@ -7,7 +8,7 @@ import {Trace} from '../Trace';
 
 export class KoaImpl extends ZipkinBase {
 
-    public createMiddleware() {
+    public createMiddleware(): KoaMiddleware {
         const tracer = Trace.instance.tracer;
         if (tracer === null) {
             return async (ctx: KoaContext, next: () => Promise<any>) => {

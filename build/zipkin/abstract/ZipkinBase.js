@@ -4,8 +4,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const zipkin = require("zipkin");
 const lib = require("../../lib/lib");
 const Trace_1 = require("../../Trace");
+var ZIPKIN_EVENT;
+(function (ZIPKIN_EVENT) {
+    ZIPKIN_EVENT["SERVER_RECV"] = "sr";
+    ZIPKIN_EVENT["SERVER_SEND"] = "ss";
+    ZIPKIN_EVENT["CLIENT_SEND"] = "cs";
+    ZIPKIN_EVENT["CLIENT_RECV"] = "cr";
+})(ZIPKIN_EVENT = exports.ZIPKIN_EVENT || (exports.ZIPKIN_EVENT = {}));
 class ZipkinBase {
     constructor() {
+        this._customizedSRRecords = {};
+        this._customizedSSRecords = {};
+        this._customizedCSRecords = {};
+        this._customizedCRRecords = {};
     }
     /**
      * 初始化 Trace 数据
@@ -28,10 +39,24 @@ class ZipkinBase {
     /**
      * 添加自定义的 RecordMap
      *
-     * @param {RecordMap} recordMap
+     * @param {ZIPKIN_EVENT.SERVER_RECV | ZIPKIN_EVENT.SERVER_SEND | ZIPKIN_EVENT.CLIENT_SEND | ZIPKIN_EVENT.CLIENT_RECV} event
+     * @param {RecordMap} records
      */
-    setCustomizedRecordMap(recordMap) {
-        this._customizedRecordMap = recordMap;
+    setCustomizedRecords(event, records) {
+        switch (event) {
+            case ZIPKIN_EVENT.SERVER_RECV:
+                this._customizedSRRecords = records;
+                break;
+            case ZIPKIN_EVENT.SERVER_SEND:
+                this._customizedSSRecords = records;
+                break;
+            case ZIPKIN_EVENT.CLIENT_SEND:
+                this._customizedCSRecords = records;
+                break;
+            case ZIPKIN_EVENT.CLIENT_RECV:
+                this._customizedCRRecords = records;
+                break;
+        }
     }
     /**
      * 记录 Zipkin ServerRecv 事件
@@ -46,8 +71,8 @@ class ZipkinBase {
         const { serviceName, host, port } = Trace_1.Trace.instance.currentServiceInfo;
         tracer.scoped(() => {
             tracer.setId(traceId);
-            for (const key in this._customizedRecordMap) {
-                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedRecordMap[key]);
+            for (const key in this._customizedSRRecords) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedSRRecords[key]);
             }
             for (const key in records) {
                 tracer.recordBinary(lib.replaceDotToUnderscore(key), records[key]);
@@ -62,6 +87,7 @@ class ZipkinBase {
             if (traceId.flags !== 0 && traceId.flags != null) {
                 tracer.recordBinary(zipkin.HttpHeaders.Flags, traceId.flags);
             }
+            this._customizedSRRecords = {};
         });
     }
     ;
@@ -69,7 +95,6 @@ class ZipkinBase {
      * 记录 Zipkin ServerSend 事件
      *
      * @param {zipkin.TraceId} traceId
-     * @param {string} method
      * @param {RecordMap} records
      * @private
      */
@@ -77,13 +102,14 @@ class ZipkinBase {
         const tracer = Trace_1.Trace.instance.tracer;
         tracer.scoped(() => {
             tracer.setId(traceId);
-            for (const key in this._customizedRecordMap) {
-                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedRecordMap[key]);
+            for (const key in this._customizedSSRecords) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedSSRecords[key]);
             }
             for (const key in records) {
                 tracer.recordBinary(lib.replaceDotToUnderscore(key), records[key]);
             }
             tracer.recordAnnotation(new zipkin.Annotation.ServerSend());
+            this._customizedSSRecords = {};
         });
     }
     ;
@@ -100,8 +126,8 @@ class ZipkinBase {
         const { serviceName, host, port } = Trace_1.Trace.instance.currentServiceInfo;
         tracer.scoped(() => {
             tracer.setId(traceId);
-            for (const key in this._customizedRecordMap) {
-                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedRecordMap[key]);
+            for (const key in this._customizedCSRecords) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedCSRecords[key]);
             }
             for (const key in records) {
                 tracer.recordBinary(lib.replaceDotToUnderscore(key), records[key]);
@@ -124,6 +150,7 @@ class ZipkinBase {
             if (traceId.flags !== 0 && traceId.flags != null) {
                 tracer.recordBinary(zipkin.HttpHeaders.Flags, traceId.flags);
             }
+            this._customizedCSRecords = {};
         });
     }
     ;
@@ -138,13 +165,14 @@ class ZipkinBase {
         const tracer = Trace_1.Trace.instance.tracer;
         tracer.scoped(() => {
             tracer.setId(traceId);
-            for (const key in this._customizedRecordMap) {
-                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedRecordMap[key]);
+            for (const key in this._customizedCRRecords) {
+                tracer.recordBinary(lib.replaceDotToUnderscore(key), this._customizedCRRecords[key]);
             }
             for (const key in records) {
                 tracer.recordBinary(lib.replaceDotToUnderscore(key), records[key]);
             }
             tracer.recordAnnotation(new zipkin.Annotation.ClientRecv());
+            this._customizedCRRecords = {};
         });
     }
     ;

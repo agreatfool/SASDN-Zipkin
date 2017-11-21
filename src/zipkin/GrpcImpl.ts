@@ -1,5 +1,6 @@
 import * as zipkin from 'zipkin';
 import * as grpc from 'grpc';
+import {RpcMiddleware} from 'sasdn';
 import {ZipkinBase} from './abstract/ZipkinBase';
 import * as lib from '../lib/lib';
 import {Trace} from '../Trace';
@@ -17,7 +18,7 @@ export class GrpcImpl extends ZipkinBase {
      *
      * @returns {(ctx: GrpcContext, next: () => Promise<any>) => Promise<any>}
      */
-    public createMiddleware() {
+    public createMiddleware(): RpcMiddleware {
         const tracer = Trace.instance.tracer;
         if (!tracer) {
             return async (ctx: GrpcContext, next: () => Promise<any>) => {

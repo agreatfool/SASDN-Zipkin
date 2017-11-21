@@ -75,9 +75,9 @@ export function createTraceId(tracer: zipkin.Tracer, isChild: boolean, getValue:
 }
 
 export namespace GrpcMetadata {
-    export function getValue(metadata: grpc.Metadata, headerName: string): string | Buffer {
+    export function getValue(metadata: grpc.Metadata, metaName: string): string | Buffer {
         // metadata.get() 方法本身就是不区分大小写的，eg：X-B3-TraceId 和 x-b3-traceid 可以获取相同的数据
-        return metadata.get(headerName)[0];
+        return metadata.get(metaName)[0];
     }
 
     export function containsRequired(metadata: grpc.Metadata): boolean {

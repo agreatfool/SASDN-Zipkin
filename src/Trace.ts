@@ -61,7 +61,7 @@ export class Trace {
         return this._receiverServiceInfo;
     }
 
-    public setReceiverServiceInfo(serviceInfo: ServiceInfo): void {
+    public set receiverServiceInfo(serviceInfo: ServiceInfo) {
         this._receiverServiceInfo = serviceInfo;
     }
 }

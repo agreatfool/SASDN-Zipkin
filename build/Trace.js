@@ -42,7 +42,7 @@ class Trace {
     get receiverServiceInfo() {
         return this._receiverServiceInfo;
     }
-    setReceiverServiceInfo(serviceInfo) {
+    set receiverServiceInfo(serviceInfo) {
         this._receiverServiceInfo = serviceInfo;
     }
 }

@@ -23,7 +23,7 @@ class ZipkinBase {
      * @param {ServiceInfo} serviceInfo
      */
     static setReceiverServiceInfo(serviceInfo) {
-        Trace_1.Trace.instance.setReceiverServiceInfo(serviceInfo);
+        Trace_1.Trace.instance.receiverServiceInfo = serviceInfo;
     }
     /**
      * 添加自定义的 RecordMap

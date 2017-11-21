@@ -75,9 +75,9 @@ function createTraceId(tracer, isChild, getValue) {
 exports.createTraceId = createTraceId;
 var GrpcMetadata;
 (function (GrpcMetadata) {
-    function getValue(metadata, headerName) {
+    function getValue(metadata, metaName) {
         // metadata.get() 方法本身就是不区分大小写的，eg：X-B3-TraceId 和 x-b3-traceid 可以获取相同的数据
-        return metadata.get(headerName)[0];
+        return metadata.get(metaName)[0];
     }
     GrpcMetadata.getValue = getValue;
     function containsRequired(metadata) {

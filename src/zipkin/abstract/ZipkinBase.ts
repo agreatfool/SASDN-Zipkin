@@ -36,7 +36,7 @@ export abstract class ZipkinBase {
      * @param {ServiceInfo} serviceInfo
      */
     public static setReceiverServiceInfo(serviceInfo: ServiceInfo): void {
-        Trace.instance.setReceiverServiceInfo(serviceInfo)
+        Trace.instance.receiverServiceInfo = serviceInfo
     }
 
     /**

@@ -97,7 +97,7 @@ const proxyConn = new TypeOrmImpl().createClient(conn, ctx);
 
 #### 为服务端添加自定义数据
 
-通过上面的代码，可以知道服务端是通过 middleware 的方式添加 zipkin trace 的，所以为服务端添加自定义数的操作必须是在 middleware 触发之前的。通常这些日志都是全局的，每个请求都需要进行记录。
+通过上面的代码，可以知道服务端是通过 middleware 的方式添加 zipkin trace 的，如果需要添加新的自定义参数，则需要创建新的middleware，并启用。所有日志都是全局的，每个请求都会经过middleware即必然会进行记录.
 
 ##### 在 grpc server 的 zipkin trace 记录添加自定义数据：请求中的元数据
 
@@ -118,7 +118,7 @@ app.use(async (ctx, next) => {
     metadata: JSON.stringify(ctx.call.metadata.getMap()) // 自定义数据的 value 值的类型必须是 string
   });
   await next();
-})
+});
 app.use(zipkinTmpl.createMiddleware());
 app.bind(`127.0.0.1:8080`).start();
 ```
@@ -143,7 +143,7 @@ app.use(async (ctx, next) => {
     httpCode: ctx.response.status.toString()// 自定义数据的 value 值的类型必须是 string
   });
   await next();
-})
+});
 app.listen(`127.0.0.1`, 8080);
 ```
 
@@ -178,7 +178,7 @@ zipkinImpl.setCustomizedRecords(ZIPKIN_EVENT.CLIENT_SEND, {
 
 proxyClient.getOrder(request, (err: Error, res: Order) => {
   if (err) {
-    throw err
+    throw err;
   }
   console.log(res);
 });

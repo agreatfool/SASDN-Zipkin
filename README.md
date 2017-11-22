@@ -31,7 +31,7 @@ app.bind('127.0.0.1:8080').start();
 import {GrpcImpl} from 'sasdn-zipkin';
 import {OrderServiceClient} from './proto/order/order_grpc_pb';
 
-GrpcImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
+GrpcImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',
   port: 0
 });
@@ -52,14 +52,14 @@ const proxyClient = new GrpcImpl().createClient(grpcClient, ctx);
 import * as Koa from 'koa';
 import {KoaImpl} from 'sasdn-zipkin';
 
-KoaImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
+KoaImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',
   port: 0
 });
 
 const app = new Koa();
 app.use(new KoaImpl().createMiddleware());
-app.listen(`127.0.0.1`, 8080);
+app.listen('127.0.0.1', 8080);
 ```
 
 ### Typeorm
@@ -75,7 +75,7 @@ import {createConnection} from 'typeorm';
 const entities = [];
 entities.push({UserEntity: UserEntity});
 
-TypeOrmImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
+TypeOrmImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',
   port: 0
 });
@@ -106,7 +106,7 @@ import {RpcApplication} from 'sasdn';
 import {GrpcImpl, ZIPKIN_EVENT} from 'sasdn-zipkin';
 
 const zipkinImpl = new GrpcImpl();
-GrpcImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
+GrpcImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',
   port: 0
 });
@@ -120,7 +120,7 @@ app.use(async (ctx, next) => {
   await next();
 });
 app.use(zipkinTmpl.createMiddleware());
-app.bind(`127.0.0.1:8080`).start();
+app.bind('127.0.0.1:8080').start();
 ```
 
 ##### 在 koa server 的 zipkin trace 记录中添加自定义数据：接口返回状态码
@@ -130,7 +130,7 @@ import * as Koa from 'koa';
 import {KoaImpl} from 'sasdn-zipkin';
 
 const zipkinImpl = new KoaImpl();
-KoaImpl.init(`http://127.0.0.1:9411/api/v1/spans`, {
+KoaImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',
   port: 0
 });
@@ -144,7 +144,7 @@ app.use(async (ctx, next) => {
   });
   await next();
 });
-app.listen(`127.0.0.1`, 8080);
+app.listen('127.0.0.1', 8080);
 ```
 
 #### 为客户端添加自定义数据

@@ -2,7 +2,7 @@
   "name": "sasdn-zipkin",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,5 +15,20 @@
   "bugs": {
     "url": "https://github.com/agreatfool/SASDN-Zipkin/issues"
   },
-  "homepage": "https://github.com/agreatfool/SASDN-Zipkin#readme"
+  "homepage": "https://github.com/agreatfool/SASDN-Zipkin#readme",
+  "dependencies": {
+    "grpc": "1.4.1",
+    "grpc-tsd": "1.0.9",
+    "koa": "2.3.0",
+    "sasdn": "1.1.0",
+    "typeorm": "0.1.1",
+    "zipkin": "0.7.3",
+    "zipkin-context-cls": "0.6.1",
+    "zipkin-instrumentation-typeorm": "0.1.6",
+    "zipkin-transport-http": "0.7.3"
+  },
+  "devDependencies": {
+    "@types/koa": "2.0.39",
+    "@types/node": "8.0.20"
+  }
 }

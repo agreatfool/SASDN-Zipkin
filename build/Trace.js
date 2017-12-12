@@ -18,7 +18,7 @@ class Trace {
     /**
      * 初始化 Trace 的基础数据
      *
-     * @param {string} url 这个参数代表 zipkin collector api 的 url 地址。
+     * @param {string} url 这个参数代表 kafka collector api 的 url 地址。
      * @param {ServiceInfo} serviceInfo
      */
     init(url, serviceInfo) {

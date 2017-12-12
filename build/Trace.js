@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const zipkin = require("zipkin");
-const TransportHttp = require("zipkin-transport-http");
+const TransportKafka = require("zipkin-transport-kafka");
 const CLSContext = require("zipkin-context-cls");
 class Trace {
     static get instance() {
@@ -25,8 +25,10 @@ class Trace {
         this._tracer = new zipkin.Tracer({
             ctxImpl: new CLSContext(),
             recorder: new zipkin.BatchRecorder({
-                logger: new TransportHttp.HttpLogger({
-                    endpoint: url
+                logger: new TransportKafka.KafkaLogger({
+                    clientOpts: {
+                        kafkaHost: url
+                    }
                 })
             }),
             sampler: new zipkin.sampler.CountingSampler(1),

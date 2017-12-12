@@ -1,5 +1,5 @@
 import * as zipkin from 'zipkin';
-import * as TransportHttp from 'zipkin-transport-http';
+import * as TransportKafka from 'zipkin-transport-kafka';
 import * as CLSContext from 'zipkin-context-cls';
 
 export interface ServiceInfo {
@@ -40,8 +40,10 @@ export class Trace {
         this._tracer = new zipkin.Tracer({
             ctxImpl: new CLSContext(),
             recorder: new zipkin.BatchRecorder({
-                logger: new TransportHttp.HttpLogger({
-                    endpoint: url
+                logger: new TransportKafka.KafkaLogger({
+                    clientOpts: {
+                        kafkaHost: url
+                    }
                 })
             }),
             sampler: new zipkin.sampler.CountingSampler(1),

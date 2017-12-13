@@ -15,7 +15,7 @@ $ npm install --save sasdn-zipkin
 import {RpcApplication} from 'sasdn';
 import {GrpcImpl} from 'sasdn-zipkin';
 
-// {http://127.0.0.1:9411/api/v1/spans } is remote collector url
+// { http://127.0.0.1:9411/api/v1/spans } is remote collector url
 GrpcImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',    // your service name
   port: 0				     // your service port
@@ -32,7 +32,7 @@ app.bind('127.0.0.1:8080').start();
 import {GrpcImpl} from 'sasdn-zipkin';
 import {OrderServiceClient} from './proto/order/order_grpc_pb';
 
-// {http://127.0.0.1:9411/api/v1/spans } is remote collector url
+// { http://127.0.0.1:9411/api/v1/spans } is remote collector url
 GrpcImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',    // your service name
   port: 0                    // your service port
@@ -54,7 +54,7 @@ const proxyClient = new GrpcImpl().createClient(grpcClient, ctx);
 import * as Koa from 'koa';
 import {KoaImpl} from 'sasdn-zipkin';
 
-// {http://127.0.0.1:9411/api/v1/spans } is remote collector url
+// { http://127.0.0.1:9411/api/v1/spans } is remote collector url
 KoaImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',   // your service name
   port: 0                   // your service port
@@ -78,7 +78,7 @@ import {createConnection} from 'typeorm';
 const entities = [];
 entities.push({UserEntity: UserEntity});
 
-// {http://127.0.0.1:9411/api/v1/spans } is remote collector url
+// { http://127.0.0.1:9411/api/v1/spans } is remote collector url
 TypeOrmImpl.init('http://127.0.0.1:9411/api/v1/spans', {
   serviceName: 'ms-user',    // your service name
   port: 0                    // your service port

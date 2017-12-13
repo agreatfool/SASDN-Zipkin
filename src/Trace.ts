@@ -1,5 +1,5 @@
 import * as zipkin from 'zipkin';
-import * as TransportHttp from 'zipkin-transport-http';
+import * as TransportKafka from 'zipkin-transport-kafka';
 import * as CLSContext from 'zipkin-context-cls';
 
 export interface ServiceInfo {
@@ -33,15 +33,17 @@ export class Trace {
     /**
      * 初始化 Trace 的基础数据
      *
-     * @param {string} url 这个参数代表 zipkin collector api 的 url 地址。
+     * @param {string} url 这个参数代表 kafka collector api 的 url 地址。
      * @param {ServiceInfo} serviceInfo
      */
     public init(url: string, serviceInfo: ServiceInfo): void {
         this._tracer = new zipkin.Tracer({
             ctxImpl: new CLSContext(),
             recorder: new zipkin.BatchRecorder({
-                logger: new TransportHttp.HttpLogger({
-                    endpoint: url
+                logger: new TransportKafka.KafkaLogger({
+                    clientOpts: {
+                        kafkaHost: url
+                    }
                 })
             }),
             sampler: new zipkin.sampler.CountingSampler(1),

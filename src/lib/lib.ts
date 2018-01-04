@@ -4,28 +4,8 @@ import * as zipkin from 'zipkin';
 import * as grpc from 'grpc';
 import {Request as KoaRequest} from 'koa';
 
-export function stringToBoolean(str: string): boolean {
-    return str === '1';
-}
-
-export function stringToIntOption(str: string): zipkin.Option {
-    try {
-        return new zipkin.option.Some(parseInt(str));
-    } catch (err) {
-        return zipkin.option.None;
-    }
-}
-
 export function replaceDotToUnderscore(str: string) {
     return str.replace(/\./g, '_');
-}
-
-export function buildZipkinOption(value: any): zipkin.Option {
-    if (value != null) {
-        return new zipkin.option.Some(value);
-    } else {
-        return zipkin.option.None;
-    }
 }
 
 /**
@@ -43,11 +23,8 @@ export function buildZipkinOption(value: any): zipkin.Option {
  */
 export function createTraceId(tracer: zipkin.Tracer, isChild: boolean, getValue: (name: string) => any): zipkin.TraceId {
 
-    function getZipkinOption(name: string): zipkin.Option {
-        return buildZipkinOption(getValue(name));
-    }
-
-    if (isChild) {
+    tracer.setId(isChild ? tracer.createChildId() : tracer.createRootId());
+    /*if (isChild) {
         const spanId = getZipkinOption(zipkin.HttpHeaders.SpanId);
         spanId.ifPresent((sid: zipkin.spanId) => {
             const childId = new zipkin.TraceId({
@@ -67,13 +44,13 @@ export function createTraceId(tracer: zipkin.Tracer, isChild: boolean, getValue:
                 parentId: rootId.parentId,
                 spanId: rootId.spanId,
                 sampled: rootId.sampled,
-                flags: getZipkinOption(zipkin.HttpHeaders.Flags)
+                flags: 0,
             });
             tracer.setId(rootIdWithFlags);
         } else {
             tracer.setId(rootId);
         }
-    }
+    }*/
 
     return tracer.id;
 }

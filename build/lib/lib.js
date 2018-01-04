@@ -2,32 +2,10 @@
 ///<reference path="../../node_modules/grpc-tsd/src/grpc.d.ts"/>
 Object.defineProperty(exports, "__esModule", { value: true });
 const zipkin = require("zipkin");
-function stringToBoolean(str) {
-    return str === '1';
-}
-exports.stringToBoolean = stringToBoolean;
-function stringToIntOption(str) {
-    try {
-        return new zipkin.option.Some(parseInt(str));
-    }
-    catch (err) {
-        return zipkin.option.None;
-    }
-}
-exports.stringToIntOption = stringToIntOption;
 function replaceDotToUnderscore(str) {
     return str.replace(/\./g, '_');
 }
 exports.replaceDotToUnderscore = replaceDotToUnderscore;
-function buildZipkinOption(value) {
-    if (value != null) {
-        return new zipkin.option.Some(value);
-    }
-    else {
-        return zipkin.option.None;
-    }
-}
-exports.buildZipkinOption = buildZipkinOption;
 /**
  * 根据 isChild 判断是创建一个 child TraceId 还是创建一个全新的 TraceId。
  * <pre>
@@ -42,12 +20,10 @@ exports.buildZipkinOption = buildZipkinOption;
  * @returns {zipkin.TraceId}
  */
 function createTraceId(tracer, isChild, getValue) {
-    function getZipkinOption(name) {
-        return buildZipkinOption(getValue(name));
-    }
-    if (isChild) {
+    tracer.setId(isChild ? tracer.createChildId() : tracer.createRootId());
+    /*if (isChild) {
         const spanId = getZipkinOption(zipkin.HttpHeaders.SpanId);
-        spanId.ifPresent((sid) => {
+        spanId.ifPresent((sid: zipkin.spanId) => {
             const childId = new zipkin.TraceId({
                 traceId: getZipkinOption(zipkin.HttpHeaders.TraceId),
                 parentId: getZipkinOption(zipkin.HttpHeaders.ParentSpanId),
@@ -57,8 +33,7 @@ function createTraceId(tracer, isChild, getValue) {
             });
             tracer.setId(childId);
         });
-    }
-    else {
+    } else {
         const rootId = tracer.createRootId();
         if (getValue(zipkin.HttpHeaders.Flags)) {
             const rootIdWithFlags = new zipkin.TraceId({
@@ -66,14 +41,13 @@ function createTraceId(tracer, isChild, getValue) {
                 parentId: rootId.parentId,
                 spanId: rootId.spanId,
                 sampled: rootId.sampled,
-                flags: getZipkinOption(zipkin.HttpHeaders.Flags)
+                flags: 0,
             });
             tracer.setId(rootIdWithFlags);
-        }
-        else {
+        } else {
             tracer.setId(rootId);
         }
-    }
+    }*/
     return tracer.id;
 }
 exports.createTraceId = createTraceId;

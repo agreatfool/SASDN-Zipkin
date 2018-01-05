@@ -20,11 +20,8 @@ export class KoaImpl extends ZipkinBase {
             const req = ctx.request;
             const res = ctx.response;
 
-            const traceId = lib.createTraceId(
-                tracer,
-                lib.HttpHeader.containsRequired(req),
-                (name: string) => lib.HttpHeader.getValue(req, name)
-            );
+            const traceId = lib.HttpHeader.containsRequired(req) ?
+              tracer.createChildId() : tracer.createRootId();
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
 
             this._logServerReceive(traceId, req.method.toUpperCase(), {

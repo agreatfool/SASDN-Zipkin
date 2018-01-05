@@ -28,7 +28,8 @@ class GrpcImpl extends ZipkinBase_1.ZipkinBase {
         }
         return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
             const req = ctx.call.metadata;
-            const traceId = lib.createTraceId(tracer, lib.GrpcMetadata.containsRequired(req), (name) => lib.GrpcMetadata.getValue(req, name));
+            const traceId = lib.GrpcMetadata.containsRequired(req) ?
+                tracer.createChildId() : tracer.createRootId();
             ctx[zipkin.HttpHeaders.TraceId] = traceId;
             this._logServerReceive(traceId, 'rpc');
             yield next();

@@ -6,6 +6,59 @@ function replaceDotToUnderscore(str) {
     return str.replace(/\./g, '_');
 }
 exports.replaceDotToUnderscore = replaceDotToUnderscore;
+function stringToInt(str) {
+    return parseInt(str);
+}
+exports.stringToInt = stringToInt;
+function booleanToString(bool) {
+    return bool ? '1' : '0';
+}
+exports.booleanToString = booleanToString;
+function buildZipkinOption(value) {
+    if (value != null) {
+        return new zipkin.option.Some(value);
+    }
+    else {
+        return zipkin.option.None;
+    }
+}
+exports.buildZipkinOption = buildZipkinOption;
+function createTraceId(tracer, isChild, getValue) {
+    function getZipkinOption(name) {
+        return buildZipkinOption(getValue(name));
+    }
+    if (isChild) {
+        const spanId = getZipkinOption(zipkin.HttpHeaders.SpanId);
+        spanId.ifPresent((sid) => {
+            const childId = new zipkin.TraceId({
+                traceId: getZipkinOption(zipkin.HttpHeaders.TraceId),
+                parentId: getZipkinOption(zipkin.HttpHeaders.ParentSpanId),
+                spanId: sid,
+                sampled: getZipkinOption(zipkin.HttpHeaders.Sampled),
+                flags: getZipkinOption(zipkin.HttpHeaders.Flags).flatMap(stringToInt).getOrElse(0)
+            });
+            tracer.setId(childId);
+        });
+    }
+    else {
+        const rootId = tracer.createRootId();
+        if (getValue(zipkin.HttpHeaders.Flags)) {
+            const rootIdWithFlags = new zipkin.TraceId({
+                traceId: getZipkinOption(rootId.traceId),
+                parentId: getZipkinOption(rootId.parentId),
+                spanId: rootId.spanId,
+                sampled: rootId.sampled.map(booleanToString),
+                flags: getZipkinOption(zipkin.HttpHeaders.Flags).flatMap(stringToInt).getOrElse(0)
+            });
+            tracer.setId(rootIdWithFlags);
+        }
+        else {
+            tracer.setId(rootId);
+        }
+    }
+    return tracer.id;
+}
+exports.createTraceId = createTraceId;
 var GrpcMetadata;
 (function (GrpcMetadata) {
     function getValue(metadata, metaName) {

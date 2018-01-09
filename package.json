@@ -24,7 +24,6 @@
     "typeorm": "0.1.1",
     "zipkin": "^0.11.1",
     "zipkin-context-cls": "^0.11.0",
-    "zipkin-instrumentation-typeorm": "^0.1.8",
     "zipkin-transport-http": "^0.11.1",
     "zipkin-transport-kafka": "^0.11.1"
   },

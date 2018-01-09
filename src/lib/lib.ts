@@ -4,78 +4,60 @@ import * as zipkin from 'zipkin';
 import * as grpc from 'grpc';
 import {Request as KoaRequest} from 'koa';
 
-export function stringToBoolean(str: string): boolean {
-    return str === '1';
-}
-
-export function stringToIntOption(str: string): zipkin.Option {
-    try {
-        return new zipkin.option.Some(parseInt(str));
-    } catch (err) {
-        return zipkin.option.None;
-    }
-}
-
 export function replaceDotToUnderscore(str: string) {
     return str.replace(/\./g, '_');
 }
-
-export function buildZipkinOption(value: any): zipkin.Option {
-    if (value != null) {
-        return new zipkin.option.Some(value);
-    } else {
-        return zipkin.option.None;
-    }
+export function stringToInt(str: string): number {
+  return parseInt(str);
 }
 
-/**
- * 根据 isChild 判断是创建一个 child TraceId 还是创建一个全新的 TraceId。
- * <pre>
- * 当前节点是一个 grpc 服务器或 koa 服务器，
- * 当服务器接收到请求时，从请求上下文的 metadata 或 header 检查 traceId 和 spanId 是否存在，
- * 如果存在，则说明当前节点是一个子节点，isChild = true。
- * </pre>
- *
- * @param {zipkin.Tracer} tracer
- * @param {boolean} isChild
- * @param {(name: string) => any} getValue
- * @returns {zipkin.TraceId}
- */
+export function booleanToString(bool: boolean): string {
+  return bool ? '1' : '0';
+}
+
+export function buildZipkinOption<T>(value: T): zipkin.option.IOption<T> {
+  if (value != null) {
+    return new zipkin.option.Some(value);
+  } else {
+    return zipkin.option.None;
+  }
+}
+
 export function createTraceId(tracer: zipkin.Tracer, isChild: boolean, getValue: (name: string) => any): zipkin.TraceId {
 
-    function getZipkinOption(name: string): zipkin.Option {
-        return buildZipkinOption(getValue(name));
-    }
+  function getZipkinOption(name: string): zipkin.option.IOption<string> {
+    return buildZipkinOption(getValue(name));
+  }
 
-    if (isChild) {
-        const spanId = getZipkinOption(zipkin.HttpHeaders.SpanId);
-        spanId.ifPresent((sid: zipkin.spanId) => {
-            const childId = new zipkin.TraceId({
-                traceId: getZipkinOption(zipkin.HttpHeaders.TraceId),
-                parentId: getZipkinOption(zipkin.HttpHeaders.ParentSpanId),
-                spanId: sid,
-                sampled: getZipkinOption(zipkin.HttpHeaders.Sampled).map(stringToBoolean),
-                flags: getZipkinOption(zipkin.HttpHeaders.Flags).flatMap(stringToIntOption).getOrElse(0)
-            });
-            tracer.setId(childId);
-        });
+  if (isChild) {
+    const spanId = getZipkinOption(zipkin.HttpHeaders.SpanId);
+    spanId.ifPresent((sid: string) => {
+      const childId = new zipkin.TraceId({
+        traceId: getZipkinOption(zipkin.HttpHeaders.TraceId),
+        parentId: getZipkinOption(zipkin.HttpHeaders.ParentSpanId),
+        spanId: sid,
+        sampled: getZipkinOption(zipkin.HttpHeaders.Sampled),
+        flags: getZipkinOption(zipkin.HttpHeaders.Flags).flatMap(stringToInt).getOrElse(0)
+      });
+      tracer.setId(childId);
+    });
+  } else {
+    const rootId = tracer.createRootId();
+    if (getValue(zipkin.HttpHeaders.Flags)) {
+      const rootIdWithFlags = new zipkin.TraceId({
+        traceId: getZipkinOption(rootId.traceId),
+        parentId: getZipkinOption(rootId.parentId),
+        spanId: rootId.spanId,
+        sampled: rootId.sampled.map(booleanToString),
+        flags: getZipkinOption(zipkin.HttpHeaders.Flags).flatMap(stringToInt).getOrElse(0)
+      });
+      tracer.setId(rootIdWithFlags);
     } else {
-        const rootId = tracer.createRootId();
-        if (getValue(zipkin.HttpHeaders.Flags)) {
-            const rootIdWithFlags = new zipkin.TraceId({
-                traceId: rootId.traceId,
-                parentId: rootId.parentId,
-                spanId: rootId.spanId,
-                sampled: rootId.sampled,
-                flags: getZipkinOption(zipkin.HttpHeaders.Flags)
-            });
-            tracer.setId(rootIdWithFlags);
-        } else {
-            tracer.setId(rootId);
-        }
+      tracer.setId(rootId);
     }
+  }
 
-    return tracer.id;
+  return tracer.id;
 }
 
 export namespace GrpcMetadata {

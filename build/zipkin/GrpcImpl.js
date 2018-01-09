@@ -129,7 +129,7 @@ class GrpcImpl extends ZipkinBase_1.ZipkinBase {
         metadata.add(zipkin.HttpHeaders.TraceId, traceId.traceId);
         metadata.add(zipkin.HttpHeaders.ParentSpanId, traceId.parentId);
         metadata.add(zipkin.HttpHeaders.SpanId, traceId.spanId);
-        metadata.add(zipkin.HttpHeaders.Sampled, traceId.sampled.getOrElse() ? '1' : '0');
+        metadata.add(zipkin.HttpHeaders.Sampled, traceId.sampled ? '1' : '0');
         return [argus[0], metadata, callback(argus.length == 2 ? argus[1] : argus[2])];
     }
 }

@@ -1,5 +1,7 @@
 # SASDN-Zipkin
 
+use `zipkin-transport-kafka`package, send trace message to kafka and consume from it.
+
 ## Install
 
 ```bash
@@ -15,8 +17,8 @@ $ npm install --save sasdn-zipkin
 import {RpcApplication} from 'sasdn';
 import {GrpcImpl} from 'sasdn-zipkin';
 
-// { http://127.0.0.1:9411/api/v1/spans } is remote collector url
-GrpcImpl.init('http://127.0.0.1:9411/api/v1/spans', {
+// { 127.0.0.1:9092 } is remote kafka collector url
+GrpcImpl.init('127.0.0.1:9092', {
   serviceName: 'ms-user',    // your service name
   port: 0				     // your service port
 });
@@ -32,8 +34,8 @@ app.bind('127.0.0.1:8080').start();
 import {GrpcImpl} from 'sasdn-zipkin';
 import {OrderServiceClient} from './proto/order/order_grpc_pb';
 
-// { http://127.0.0.1:9411/api/v1/spans } is remote collector url
-GrpcImpl.init('http://127.0.0.1:9411/api/v1/spans', {
+// { 127.0.0.1:9092 } is remote kafka collector url
+GrpcImpl.init('127.0.0.1:9092', {
   serviceName: 'ms-user',    // your service name
   port: 0                    // your service port
 });
@@ -54,8 +56,8 @@ const proxyClient = new GrpcImpl().createClient(grpcClient, ctx);
 import * as Koa from 'koa';
 import {KoaImpl} from 'sasdn-zipkin';
 
-// { http://127.0.0.1:9411/api/v1/spans } is remote collector url
-KoaImpl.init('http://127.0.0.1:9411/api/v1/spans', {
+// { 127.0.0.1:9092 } is remote kafka collector url
+KoaImpl.init('127.0.0.1:9092', {
   serviceName: 'ms-user',   // your service name
   port: 0                   // your service port
 });
@@ -78,8 +80,8 @@ import {createConnection} from 'typeorm';
 const entities = [];
 entities.push({UserEntity: UserEntity});
 
-// { http://127.0.0.1:9411/api/v1/spans } is remote collector url
-TypeOrmImpl.init('http://127.0.0.1:9411/api/v1/spans', {
+// { 127.0.0.1:9092 } is remote kafka collector url
+TypeOrmImpl.init('127.0.0.1:9092', {
   serviceName: 'ms-user',    // your service name
   port: 0                    // your service port
 });
@@ -110,7 +112,7 @@ import {RpcApplication} from 'sasdn';
 import {GrpcImpl, ZIPKIN_EVENT} from 'sasdn-zipkin';
 
 const zipkinImpl = new GrpcImpl();
-GrpcImpl.init('http://127.0.0.1:9411/api/v1/spans', {
+GrpcImpl.init('127.0.0.1:9092', {
   serviceName: 'ms-user',
   port: 0
 });
@@ -134,7 +136,8 @@ import * as Koa from 'koa';
 import {KoaImpl} from 'sasdn-zipkin';
 
 const zipkinImpl = new KoaImpl();
-KoaImpl.init('http://127.0.0.1:9411/api/v1/spans', {
+// { 127.0.0.1:9092 } is remote kafka collector url
+KoaImpl.init('127.0.0.1:9092', {
   serviceName: 'ms-user',
   port: 0
 });
@@ -162,7 +165,8 @@ import {GrpcImpl, ZIPKIN_EVENT} from 'sasdn-zipkin';
 import {OrderServiceClient} from './proto/order/order_grpc_pb';
 
 const zipkinImpl = new GrpcImpl();
-GrpcImpl.init('http://127.0.0.1:9411/api/v1/spans', {
+// { 127.0.0.1:9092 } is remote kafka collector url
+GrpcImpl.init('127.0.0.1:9092', {
   serviceName: 'ms-user',
   port: 0
 });
@@ -198,7 +202,7 @@ import {createConnection} from 'typeorm';
 const entities = [];
 entities.push({UserEntity: UserEntity});
 
-TypeOrmImpl.init('http://127.0.0.1:9411/api/v1/spans', {
+TypeOrmImpl.init('127.0.0.1:9092', {
   serviceName: 'ms-user',
   port: 0
 });

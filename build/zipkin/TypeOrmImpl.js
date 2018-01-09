@@ -32,7 +32,8 @@ class TypeOrmImpl extends ZipkinBase_1.ZipkinBase {
                 const queryBuilder = originalCreateQueryBuilder.apply(repository, arguments);
                 // 遍历 SelectQueryBuilder 中的所有方法，找到 stream，executeCountQuery，loadRawResults 方法并进行参数改造
                 Object.getOwnPropertyNames(Object.getPrototypeOf(queryBuilder)).forEach((property) => {
-                    if (property == 'stream' || property == 'executeCountQuery' || property == 'loadRawResults') {
+                    if (property == 'stream' || property == 'executeCountQuery' ||
+                        property == 'loadRawResults' || property == 'getRawAndEntities' || property == 'getMany') {
                         const original = queryBuilder[property];
                         function proxyQueryExecute() {
                             // create SpanId

@@ -24,6 +24,58 @@ export class TypeOrmImpl extends ZipkinBase {
 
     // 将数据库连接进行改造，返回数据 repository 中携带被改造的方法。
     // conn.getRepository()
+
+    const originalConnCreateQueryBuilder = conn['createQueryBuilder'];
+
+    function proxyConnCreateQueryBuilder<Entity>(): SelectQueryBuilder<Entity> {
+      const queryBuilder = originalConnCreateQueryBuilder.apply(conn, arguments);
+      if (conn['proxy'] == true) {
+        return queryBuilder;
+      }
+      Object.getOwnPropertyNames(Object.getPrototypeOf(queryBuilder)).forEach((property) => {
+        if (property == 'stream' || property == 'executeCountQuery' || property == 'loadRawResults') {
+
+          const original = queryBuilder[property];
+
+          function proxyQueryExecute() {
+            // create SpanId
+            tracer.setId(tracer.createChildId());
+            const traceId = tracer.id;
+
+            this._logClientSend(traceId, 'db_query', {
+              'db_sql': queryBuilder['getSql']()
+            });
+
+            const call = original.apply(queryBuilder, arguments) as Promise<any>;
+            return call.then((res) => {
+              let resObj: string;
+              try {
+                resObj = JSON.stringify(res);
+              } catch (e) {
+                resObj = res.toString();
+              }
+
+              this._logClientReceive(traceId, {
+                'db_end': `Succeed`,
+                'db_response': resObj
+              });
+              return res;
+            }).catch((err) => {
+              this._logClientReceive(traceId, {
+                'db_end': `Error`,
+                'db_response': err.message
+              });
+              throw err;
+            });
+          }
+
+          queryBuilder[property] = proxyQueryExecute.bind(this);
+        }
+      });
+
+      return queryBuilder;
+    }
+
     const originalGetRepository = conn['getRepository'];
 
     function proxyGetRepository<Entity>(): Repository<Entity> {
@@ -40,8 +92,7 @@ export class TypeOrmImpl extends ZipkinBase {
 
         // 遍历 SelectQueryBuilder 中的所有方法，找到 stream，executeCountQuery，loadRawResults 方法并进行参数改造
         Object.getOwnPropertyNames(Object.getPrototypeOf(queryBuilder)).forEach((property) => {
-          if (property == 'stream' || property == 'executeCountQuery' ||
-            property == 'loadRawResults' || property == 'getRawAndEntities' || property == 'getMany') {
+          if (property == 'stream' || property == 'executeCountQuery' || property == 'loadRawResults') {
 
             const original = queryBuilder[property];
 
@@ -90,6 +141,7 @@ export class TypeOrmImpl extends ZipkinBase {
       return repository;
     }
 
+    conn['createQueryBuilder'] = proxyConnCreateQueryBuilder.bind(this);
     conn['getRepository'] = proxyGetRepository.bind(this);
     return conn;
   }

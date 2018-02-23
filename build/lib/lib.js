@@ -1,5 +1,4 @@
 "use strict";
-///<reference path="../../node_modules/grpc-tsd/src/grpc.d.ts"/>
 Object.defineProperty(exports, "__esModule", { value: true });
 const zipkin = require("zipkin");
 function replaceDotToUnderscore(str) {
@@ -15,7 +14,7 @@ function booleanToString(bool) {
 }
 exports.booleanToString = booleanToString;
 function buildZipkinOption(value) {
-    if (value != null) {
+    if (value) {
         return new zipkin.option.Some(value);
     }
     else {

@@ -17,10 +17,8 @@
   },
   "homepage": "https://github.com/agreatfool/SASDN-Zipkin#readme",
   "dependencies": {
-    "grpc": "1.4.1",
-    "grpc-tsd": "1.0.9",
+    "grpc": "^1.9.1",
     "koa": "2.3.0",
-    "sasdn": "1.1.4",
     "typeorm": "0.1.1",
     "zipkin": "^0.11.1",
     "zipkin-context-cls": "^0.11.0",
@@ -29,6 +27,7 @@
   },
   "devDependencies": {
     "@types/koa": "2.0.39",
-    "@types/node": "8.0.20"
+    "@types/node": "8.0.20",
+    "sasdn": "git://github.com/ShenYiQian/SASDN.git#master"
   }
 }

@@ -1,12 +1,12 @@
 import * as zipkin from 'zipkin';
 import * as grpc from 'grpc';
-import { RpcMiddleware } from 'sasdn';
+import { RpcMiddleware, GrpcServerCall } from 'sasdn';
 import { ZipkinBase } from './abstract/ZipkinBase';
 import * as lib from '../lib/lib';
 import { Trace } from '../Trace';
 
 export declare class GrpcContext {
-  call: grpc.IServerCall;
+  call: GrpcServerCall<RequestType, ResponseType>;
 }
 
 export declare type GrpcClient = grpc.Client;

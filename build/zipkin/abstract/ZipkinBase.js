@@ -1,5 +1,4 @@
 "use strict";
-///<reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts"/>
 Object.defineProperty(exports, "__esModule", { value: true });
 const zipkin = require("zipkin");
 const lib = require("../../lib/lib");
@@ -147,7 +146,7 @@ class ZipkinBase {
                     port: receiverServiceInfo.port || 0
                 }));
             }
-            if (traceId.flags !== 0 && traceId.flags != null) {
+            if (traceId.flags && traceId.flags !== 0) {
                 tracer.recordBinary(zipkin.HttpHeaders.Flags, traceId.flags);
             }
             this._customizedCSRecords = {};

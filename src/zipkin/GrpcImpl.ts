@@ -6,7 +6,7 @@ import * as lib from '../lib/lib';
 import { Trace } from '../Trace';
 
 export declare class GrpcContext {
-  call: GrpcServerCall<RequestType, ResponseType>;
+  call: GrpcServerCall<any, any>;
 }
 
 export declare type GrpcClient = grpc.Client;

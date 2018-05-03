@@ -32,11 +32,10 @@ export abstract class ZipkinBase {
   /**
    * 初始化 Trace 数据
    *
-   * @param {string} url Zipkin Collector API url.
    * @param {ServiceInfo} serviceInfo
    */
-  public static init(url: string, serviceInfo: ServiceInfo): void {
-    Trace.instance.init(url, serviceInfo);
+  public static init(serviceInfo: ServiceInfo): void {
+    Trace.instance.init(serviceInfo);
   };
 
   /**
@@ -96,10 +95,6 @@ export abstract class ZipkinBase {
    * @private
    */
   protected _logServerReceive(traceId: zipkin.TraceId, method: string, records: RecordMap = {}): void {
-    if (process.env.DISABLE_ZIPKIN) {
-      return;
-    }
-
     const tracer = Trace.instance.tracer;
     const { serviceName, host, port } = Trace.instance.currentServiceInfo;
 
@@ -138,10 +133,6 @@ export abstract class ZipkinBase {
    * @private
    */
   protected _logServerSend(traceId: zipkin.TraceId, records: RecordMap = {}): void {
-    if (process.env.DISABLE_ZIPKIN) {
-      return;
-    }
-
     const tracer = Trace.instance.tracer;
 
     tracer.scoped(() => {
@@ -170,10 +161,6 @@ export abstract class ZipkinBase {
    * @private
    */
   protected _logClientSend(traceId: zipkin.TraceId, method: string, records: RecordMap = {}): void {
-    if (process.env.DISABLE_ZIPKIN) {
-      return;
-    }
-
     const tracer = Trace.instance.tracer;
     const { serviceName, host, port } = Trace.instance.currentServiceInfo;
 
@@ -221,10 +208,6 @@ export abstract class ZipkinBase {
    * @private
    */
   protected _logClientReceive(traceId: zipkin.TraceId, records: RecordMap = {}): void {
-    if (process.env.DISABLE_ZIPKIN) {
-      return;
-    }
-
     const tracer = Trace.instance.tracer;
 
     tracer.scoped(() => {

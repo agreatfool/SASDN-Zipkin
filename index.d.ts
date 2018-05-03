@@ -22,7 +22,7 @@ export interface ServiceInfo {
 declare abstract class ZipkinBase {
     public constructor();
 
-    public static init(url: string, serviceInfo: ServiceInfo): void;
+    public static init(serviceInfo: ServiceInfo): void;
 
     public static setReceiverServiceInfo(serviceInfo: ServiceInfo): void;
 

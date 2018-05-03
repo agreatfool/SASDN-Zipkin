@@ -32,11 +32,10 @@ export abstract class ZipkinBase {
   /**
    * 初始化 Trace 数据
    *
-   * @param {string} url Zipkin Collector API url.
    * @param {ServiceInfo} serviceInfo
    */
-  public static init(url: string, serviceInfo: ServiceInfo): void {
-    Trace.instance.init(url, serviceInfo);
+  public static init(serviceInfo: ServiceInfo): void {
+    Trace.instance.init(serviceInfo);
   };
 
   /**
@@ -95,7 +94,7 @@ export abstract class ZipkinBase {
    * @param {RecordMap} records
    * @private
    */
-  protected _logServerReceive(traceId: zipkin.TraceId, method: string, records: RecordMap = {}) {
+  protected _logServerReceive(traceId: zipkin.TraceId, method: string, records: RecordMap = {}): void {
     const tracer = Trace.instance.tracer;
     const { serviceName, host, port } = Trace.instance.currentServiceInfo;
 

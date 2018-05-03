@@ -20,11 +20,10 @@ class ZipkinBase {
     /**
      * 初始化 Trace 数据
      *
-     * @param {string} url Zipkin Collector API url.
      * @param {ServiceInfo} serviceInfo
      */
-    static init(url, serviceInfo) {
-        Trace_1.Trace.instance.init(url, serviceInfo);
+    static init(serviceInfo) {
+        Trace_1.Trace.instance.init(serviceInfo);
     }
     ;
     /**

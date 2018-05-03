@@ -1,6 +1,6 @@
 import * as zipkin from 'zipkin';
 import * as grpc from 'grpc';
-import { RpcMiddleware, GrpcServerCall } from 'sasdn';
+import { GrpcServerCall, RpcMiddleware } from 'sasdn';
 import { ZipkinBase } from './abstract/ZipkinBase';
 import * as lib from '../lib/lib';
 import { Trace } from '../Trace';

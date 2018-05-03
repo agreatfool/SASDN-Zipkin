@@ -22,13 +22,13 @@
     "typeorm": "0.1.1",
     "zipkin": "^0.11.1",
     "zipkin-context-cls": "^0.11.0",
-    "zipkin-transport-file": "^0.1.0",
+    "zipkin-transport-file": "^0.1.1",
     "zipkin-transport-http": "^0.11.1",
     "zipkin-transport-kafka": "^0.11.1"
   },
   "devDependencies": {
     "@types/koa": "2.0.39",
     "@types/node": "8.0.20",
-    "sasdn": "^1.5.0"
+    "sasdn": "^1.6.6"
   }
 }

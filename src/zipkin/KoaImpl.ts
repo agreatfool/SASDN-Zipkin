@@ -1,7 +1,6 @@
 import * as zipkin from 'zipkin';
 import * as url from 'url';
-import { Middleware as KoaMiddleware } from 'koa';
-import { Context as KoaContext, Request as KoaRequest } from 'koa';
+import { Context as KoaContext, Middleware as KoaMiddleware, Request as KoaRequest } from 'koa';
 import * as lib from '../lib/lib';
 import { ZipkinBase } from './abstract/ZipkinBase';
 import { Trace } from '../Trace';

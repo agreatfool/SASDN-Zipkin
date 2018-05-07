@@ -65,7 +65,7 @@ class ZipkinBase {
      * @private
      */
     _logServerReceive(traceId, method, records = {}) {
-        const enabled = process.env.ENABLED_TRACE === 'true' || true;
+        const enabled = process.env.ENABLED_TRACE || true;
         if (!enabled) {
             return;
         }
@@ -101,7 +101,7 @@ class ZipkinBase {
      * @private
      */
     _logServerSend(traceId, records = {}) {
-        const enabled = process.env.ENABLED_TRACE === 'true' || true;
+        const enabled = process.env.ENABLED_TRACE || true;
         if (!enabled) {
             return;
         }
@@ -128,7 +128,7 @@ class ZipkinBase {
      * @private
      */
     _logClientSend(traceId, method, records = {}) {
-        const enabled = process.env.ENABLED_TRACE === 'true' || true;
+        const enabled = process.env.ENABLED_TRACE || true;
         if (!enabled) {
             return;
         }
@@ -172,7 +172,7 @@ class ZipkinBase {
      * @private
      */
     _logClientReceive(traceId, records = {}) {
-        const enabled = process.env.ENABLED_TRACE === 'true' || true;
+        const enabled = process.env.ENABLED_TRACE || true;
         if (!enabled) {
             return;
         }

@@ -95,7 +95,7 @@ export abstract class ZipkinBase {
    * @private
    */
   protected _logServerReceive(traceId: zipkin.TraceId, method: string, records: RecordMap = {}): void {
-    const enabled = process.env.ENABLED_TRACE || true;
+    const enabled = process.env.TRACE_ENABLED || true;
     if (!enabled) {
       return;
     }
@@ -138,7 +138,7 @@ export abstract class ZipkinBase {
    * @private
    */
   protected _logServerSend(traceId: zipkin.TraceId, records: RecordMap = {}): void {
-    const enabled = process.env.ENABLED_TRACE || true;
+    const enabled = process.env.TRACE_ENABLED || true;
     if (!enabled) {
       return;
     }
@@ -171,7 +171,7 @@ export abstract class ZipkinBase {
    * @private
    */
   protected _logClientSend(traceId: zipkin.TraceId, method: string, records: RecordMap = {}): void {
-    const enabled = process.env.ENABLED_TRACE || true;
+    const enabled = process.env.TRACE_ENABLED || true;
     if (!enabled) {
       return;
     }
@@ -223,7 +223,7 @@ export abstract class ZipkinBase {
    * @private
    */
   protected _logClientReceive(traceId: zipkin.TraceId, records: RecordMap = {}): void {
-    const enabled = process.env.ENABLED_TRACE || true;
+    const enabled = process.env.TRACE_ENABLED || true;
     if (!enabled) {
       return;
     }

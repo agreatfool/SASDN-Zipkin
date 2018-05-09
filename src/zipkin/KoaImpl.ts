@@ -9,7 +9,8 @@ export class KoaImpl extends ZipkinBase {
 
   public createMiddleware(): KoaMiddleware {
     const tracer = Trace.instance.tracer;
-    if (tracer === null) {
+    const enabled = (process.env.TRACE_ENABLED || '1') === '1';
+    if (tracer === null || !enabled) {
       return async (ctx: KoaContext, next: () => Promise<any>) => {
         await next();
       };

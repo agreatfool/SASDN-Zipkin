@@ -65,10 +65,6 @@ class ZipkinBase {
      * @private
      */
     _logServerReceive(traceId, method, records = {}) {
-        const enabled = process.env.TRACE_ENABLED || true;
-        if (!enabled) {
-            return;
-        }
         const tracer = Trace_1.Trace.instance.tracer;
         const { serviceName, host, port } = Trace_1.Trace.instance.currentServiceInfo;
         tracer.scoped(() => {
@@ -101,10 +97,6 @@ class ZipkinBase {
      * @private
      */
     _logServerSend(traceId, records = {}) {
-        const enabled = process.env.TRACE_ENABLED || true;
-        if (!enabled) {
-            return;
-        }
         const tracer = Trace_1.Trace.instance.tracer;
         tracer.scoped(() => {
             tracer.setId(traceId);
@@ -128,10 +120,6 @@ class ZipkinBase {
      * @private
      */
     _logClientSend(traceId, method, records = {}) {
-        const enabled = process.env.TRACE_ENABLED || true;
-        if (!enabled) {
-            return;
-        }
         const tracer = Trace_1.Trace.instance.tracer;
         const { serviceName, host, port } = Trace_1.Trace.instance.currentServiceInfo;
         tracer.scoped(() => {
@@ -172,10 +160,6 @@ class ZipkinBase {
      * @private
      */
     _logClientReceive(traceId, records = {}) {
-        const enabled = process.env.TRACE_ENABLED || true;
-        if (!enabled) {
-            return;
-        }
         const tracer = Trace_1.Trace.instance.tracer;
         tracer.scoped(() => {
             tracer.setId(traceId);

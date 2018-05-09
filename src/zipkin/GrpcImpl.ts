@@ -56,7 +56,8 @@ export class GrpcImpl extends ZipkinBase {
    */
   public createClient<GrpcClient>(client: GrpcClient, ctx?: object): GrpcClient {
     const tracer = Trace.instance.tracer;
-    if (!tracer) {
+    const enabled = (process.env.TRACE_ENABLED || '1') === '1';
+    if (!tracer || !enabled) {
       console.log('Return normal client.');
       return client;
     }

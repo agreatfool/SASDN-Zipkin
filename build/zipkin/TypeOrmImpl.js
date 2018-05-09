@@ -9,7 +9,8 @@ class TypeOrmImpl extends ZipkinBase_1.ZipkinBase {
     }
     createClient(conn, ctx) {
         const tracer = Trace_1.Trace.instance.tracer;
-        if (!tracer || conn['proxy'] == true) {
+        const enabled = (process.env.TRACE_ENABLED || '1') === '1';
+        if (!tracer || conn['proxy'] == true || !enabled) {
             return conn;
         }
         // 判断 ctx 中是否存在 traceId，如果存在则这个代理客户端会根据 traceId 生成一个 child traceId

@@ -11,7 +11,8 @@ export class TypeOrmImpl extends ZipkinBase {
 
   public createClient<TypeOrmConnection>(conn: TypeOrmConnection, ctx?: object): TypeOrmConnection {
     const tracer = Trace.instance.tracer;
-    if (!tracer || conn['proxy'] == true) {
+    const enabled = (process.env.TRACE_ENABLED || '1') === '1';
+    if (!tracer || conn['proxy'] == true || !enabled) {
       return conn;
     }
 

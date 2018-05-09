@@ -16,7 +16,8 @@ const Trace_1 = require("../Trace");
 class KoaImpl extends ZipkinBase_1.ZipkinBase {
     createMiddleware() {
         const tracer = Trace_1.Trace.instance.tracer;
-        if (tracer === null) {
+        const enabled = (process.env.TRACE_ENABLED || '1') === '1';
+        if (tracer === null || !enabled) {
             return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
                 yield next();
             });
